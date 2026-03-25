@@ -1,0 +1,82 @@
+@model ArıtmaEnvanter.Models.Entities.Personel
+@{
+    ViewData["Title"] = "Yeni Personel Ekle";
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-person-plus me-2" style="color:#00a8e8;"></i>Yeni Personel Ekle</h2>
+        <p>Sisteme yeni personel tanımlayın</p>
+    </div>
+    <a asp-action="Index" class="btn-outline-clear"><i class="bi bi-arrow-left"></i> Listeye Dön</a>
+</div>
+
+<div class="form-card">
+    <div class="form-card-head">
+        <i class="bi bi-person-badge"></i>
+        <h5>Personel Bilgileri</h5>
+    </div>
+    <div class="form-card-body">
+        <form method="post" asp-controller="Personel" asp-action="Olustur">
+            @Html.AntiForgeryToken()
+            <div class="mb-3">
+                <label class="form-label">Ad Soyad <span style="color:#ef4444;">*</span></label>
+                <input asp-for="AdSoyad" class="form-control" placeholder="Örn: Ahmet Yılmaz" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Kadro Türü <span style="color:#ef4444;">*</span></label>
+                <select asp-for="KadroTuru" class="form-select" required>
+                    <option value="">— Kadro Türü Seçin —</option>
+                    <option value="İHALE PERSONELİ">İHALE PERSONELİ</option>
+                    <option value="İŞKUR (TYP)">İŞKUR (TYP)</option>
+                    <option value="MASKİ PERSONEL AŞ.">MASKİ PERSONEL AŞ.</option>
+                    <option value="MEMUR">MEMUR</option>
+                    <option value="STAJYER">STAJYER</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Ünvan</label>
+                <select asp-for="Unvan" class="form-select">
+                    <option value="">— Ünvan Seçin —</option>
+                    <option value="AĞIR VASITA ŞOFÖRÜ">AĞIR VASITA ŞOFÖRÜ</option>
+                    <option value="ARITMA İŞÇİSİ">ARITMA İŞÇİSİ</option>
+                    <option value="ARITMA TESİSLERİ DAİRESİ BAŞKANI">ARITMA TESİSLERİ DAİRESİ BAŞKANI</option>
+                    <option value="BÜRO PERSONELİ">BÜRO PERSONELİ</option>
+                    <option value="DESTEK PERSONELİ">DESTEK PERSONELİ</option>
+                    <option value="İDARİ PERSONEL">İDARİ PERSONEL</option>
+                    <option value="MÜHENDİS">MÜHENDİS</option>
+                    <option value="OPERATÖR">OPERATÖR</option>
+                    <option value="STAJYER">STAJYER</option>
+                    <option value="ŞOFÖR">ŞOFÖR</option>
+                    <option value="TEKNİK SAHA SORUMLUSU">TEKNİK SAHA SORUMLUSU</option>
+                    <option value="TEKNİK ŞEF">TEKNİK ŞEF</option>
+                    <option value="USTA">USTA</option>
+                    <option value="UZMAN PERSONEL">UZMAN PERSONEL</option>
+                    <option value="YÖNETİCİ (ŞEF MÜHENDİS)">YÖNETİCİ (ŞEF MÜHENDİS)</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Birim <span style="color:#ef4444;">*</span></label>
+                <select asp-for="BirimId" class="form-select" required>
+                    <option value="">— Birim Seçin —</option>
+                    @foreach (var b in ViewBag.Birimler)
+                    {
+                        <option value="@b.Id">@b.Ad</option>
+                    }
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Telefon</label>
+                <input asp-for="Telefon" class="form-control" placeholder="05XX XXX XX XX">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input asp-for="Email" type="email" class="form-control" placeholder="ornek@maski.gov.tr">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-maski"><i class="bi bi-check-lg"></i> Kaydet</button>
+                <a asp-action="Index" class="btn-outline-clear">İptal</a>
+            </div>
+        </form>
+    </div>
+</div>

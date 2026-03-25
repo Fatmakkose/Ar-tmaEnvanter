@@ -1,0 +1,228 @@
+@model List<ArıtmaEnvanter.Models.Entities.Zimmet>
+@{
+    ViewData["Title"] = "Zimmet Takibi";
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-clipboard-check-fill me-2" style="color:#00a8e8;"></i>Zimmet Takibi</h2>
+        <p>Personele verilen zimmetleri takip edin</p>
+    </div>
+    <div class="header-actions">
+        @if (User.IsInRole("Admin"))
+        {
+            <form asp-action="TumunuSil" method="post"
+                onsubmit="return confirm('Tüm zimmet kayıtlarını silmek istediğinize emin misiniz? Bu işlem geri alınamaz!');"
+                style="margin:0;">
+                <button type="submit" class="btn-del">
+                    <i class="bi bi-trash3-fill"></i> Tümünü Sil
+                </button>
+            </form>
+        }
+        <button type="button" class="btn-edit" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="bi bi-file-earmark-arrow-up"></i> Toplu İçe Aktar
+        </button>
+        <a asp-action="ExcelExport" class="btn-edit">
+            <i class="bi bi-file-earmark-excel"></i> Excel'e Aktar
+        </a>
+        <a asp-action="Olustur" class="btn-cyan">
+            <i class="bi bi-plus-lg"></i> Yeni Zimmet Ver
+        </a>
+    </div>
+</div>
+<div class="search-panel p-3 mb-4" style="background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+    <form method="get" action="@Url.Action("Index", "Zimmet")">
+        <div class="d-flex w-100" style="gap: 5px; height: 76px;">
+          
+            <div class="d-flex flex-column flex-grow-1" style="flex-basis: 22%;">
+                <div class="d-flex align-items-center justify-content-center" style="background-color: black; color: white; font-weight: bold; font-size: 13px; height: 38px;">ADI SOYADI</div>
+                <input list="adSoyadList" type="text" name="adSoyad" value="@ViewBag.AdSoyad" class="form-control rounded-0 px-2" style="background-color: #f8fafc; border: 1px solid #e2e8f0; height: 38px; font-weight: 500; font-size: 14px;" autocomplete="off" />
+                <datalist id="adSoyadList">
+                    @if(ViewBag.PersonelAdlari != null) {
+                        foreach(var isim in ViewBag.PersonelAdlari) {
+                            <option value="@isim"></option>
+                        }
+                    }
+                </datalist>
+            </div>
+            
+          
+            <div class="d-flex flex-column flex-grow-1" style="flex-basis: 22%;">
+                <div class="d-flex align-items-center justify-content-center" style="background-color: black; color: white; font-weight: bold; font-size: 13px; height: 38px;">KADRO TÜRÜ</div>
+                <input list="kadroTuruList" type="text" name="kadroTuru" value="@ViewBag.KadroTuru" class="form-control rounded-0 px-2" style="background-color: #f8fafc; border: 1px solid #e2e8f0; height: 38px; font-weight: 500; font-size: 14px;" autocomplete="off" />
+                <datalist id="kadroTuruList">
+                    <option value="İHALE PERSONELİ"></option>
+                    <option value="İŞKUR (TYP)"></option>
+                    <option value="MASKİ PERSONEL AŞ."></option>
+                    <option value="MEMUR"></option>
+                    <option value="STAJYER"></option>
+                </datalist>
+            </div>
+
+           
+            <div class="d-flex flex-column flex-grow-1" style="flex-basis: 22%;">
+                <div class="d-flex align-items-center justify-content-center" style="background-color: black; color: white; font-weight: bold; font-size: 13px; height: 38px;">ÜNVANI</div>
+                <input list="unvanList" type="text" name="unvan" value="@ViewBag.Unvan" class="form-control rounded-0 px-2" style="background-color: #f8fafc; border: 1px solid #e2e8f0; height: 38px; font-weight: 500; font-size: 14px;" autocomplete="off" />
+                <datalist id="unvanList">
+                    <option value="AĞIR VASITA ŞOFÖRÜ"></option>
+                    <option value="ARITMA İŞÇİSİ"></option>
+                    <option value="ARITMA TESİSLERİ DAİRESİ BAŞKANI"></option>
+                    <option value="BÜRO PERSONELİ"></option>
+                    <option value="DESTEK PERSONELİ"></option>
+                    <option value="İDARİ PERSONEL"></option>
+                    <option value="MÜHENDİS"></option>
+                    <option value="OPERATÖR"></option>
+                    <option value="STAJYER"></option>
+                    <option value="ŞOFÖR"></option>
+                    <option value="TEKNİK SAHA SORUMLUSU"></option>
+                    <option value="TEKNİK ŞEF"></option>
+                    <option value="USTA"></option>
+                    <option value="UZMAN PERSONEL"></option>
+                    <option value="YÖNETİCİ (ŞEF MÜHENDİS)"></option>
+                </datalist>
+            </div>
+
+           
+            <div class="d-flex flex-column flex-grow-1" style="flex-basis: 22%;">
+                <div class="d-flex align-items-center justify-content-center" style="background-color: black; color: white; font-weight: bold; font-size: 13px; height: 38px;">MALZEMENİN ADI</div>
+                <input list="malzemeList" type="text" name="malzemeAdi" value="@ViewBag.MalzemeAdi" class="form-control rounded-0 px-2" style="background-color: #f8fafc; border: 1px solid #e2e8f0; height: 38px; font-weight: 500; font-size: 14px;" autocomplete="off" />
+                <datalist id="malzemeList">
+                    @if(ViewBag.MalzemeAdlari != null) {
+                        foreach(var malz in ViewBag.MalzemeAdlari) {
+                            <option value="@malz"></option>
+                        }
+                    }
+                </datalist>
+            </div>
+
+            <div class="d-flex flex-column flex-grow-1" style="flex-basis: 12%; gap: 3px;">
+                <button type="submit" class="btn border-0 rounded-0 p-0 m-0" style="background-color: #0284c7; color: white; font-weight: bold; font-size: 13px; flex: 1; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#0369a1'" onmouseout="this.style.backgroundColor='#0284c7'">ARAMA</button>
+                <a href="@Url.Action("Index", "Zimmet")" class="btn border-0 rounded-0 p-0 m-0 d-flex align-items-center justify-content-center" style="background-color: #64748b; color: white; font-weight: bold; font-size: 13px; flex: 1; text-decoration: none; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#475569'" onmouseout="this.style.backgroundColor='#64748b'">TEMİZLE</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Zimmet Aktarımı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <form asp-action="ExcelImport" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="alert alert-info" style="font-size:13px;">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Lütfen verileri <b>PERSONEL BAZLI ZİMMET DOSYASI</b> formatına (Adı Soyadı, Kadro Türü, Ünvanı, Malzemenin Adı, Teslim Tarihi, Bulunduğu Bölüm) uygun şekilde hazırlayın. Kayıtların 6. satırdan başladığından emin olun.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-600">Özel Excel Dosyası Seçin</label>
+                        <input type="file" name="excelFile" class="form-control" accept=".xlsx,.xls,.xlsm" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn-cyan">Yüklemeyi Başlat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Basarili"] != null)
+{
+    <div class="alert-ok"><i class="bi bi-check-circle-fill"></i> @TempData["Basarili"]</div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert-err"><i class="bi bi-exclamation-circle-fill"></i> @TempData["Hata"]</div>
+}
+
+<div class="data-card">
+    <div class="data-card-head">
+        <h6><i class="bi bi-table"></i> Zimmet Listesi <span class="record-count">@Model.Count kayıt</span></h6>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table">
+                <thead style="background-color: #fce49c; border-bottom: 2px solid #dcaf3e;">
+                    <tr>
+                        <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">ADI SOYADI</th>
+                        <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">KADRO TÜRÜ</th>
+                        <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">ÜNVANI</th>
+                        <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">MALZEMENİN ADI</th>
+                        <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">SERİ NO</th>
+                        <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">TESLİM TARİHİ</th>
+                        <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">DURUMU</th>
+                        <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">BULUNDUĞU BÖLÜM</th>
+                        <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">İŞLEM</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int i = 1;
+                    }
+                    @foreach (var z in Model)
+                    {
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="font-weight:700; color:#003d7a;">@z.Personel?.AdSoyad</td>
+                            <td>@(z.Personel?.KadroTuru ?? "—")</td>
+                            <td>@(z.Personel?.Unvan ?? "—")</td>
+                            <td><strong>@z.Malzeme?.Ad</strong></td>
+                            <td style="color:#64748b;font-size:13px;">@(z.Malzeme?.SeriNo ?? "—")</td>
+                            <td style="color:#64748b;font-size:13px;">@z.ZimmetTarihi.ToLocalTime().ToString("dd.MM.yyyy")</td>
+                            <td>
+                                @if (z.Durum == "Aktif")
+                                {
+                                    <span class="badge-aktif"><i class="bi bi-check-circle-fill"></i> Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge-hurda"><i class="bi bi-arrow-return-left"></i> İade Edildi</span>
+                                }
+                            </td>
+                            <td>
+                                <span style="background:#f3f4f6;color:#374151;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;display:inline-block;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="@z.Personel?.Birim?.Ad">
+                                    <i class="bi bi-building me-1 opacity-50"></i> @(z.Personel?.Birim?.Ad ?? "—")
+                                </span>
+                            </td>
+                            <td>
+                                <div style="display:flex;gap:6px;">
+                                    @if (z.Durum == "Aktif")
+                                    {
+                                        <form asp-action="Iade" asp-route-id="@z.Id" method="post" class="d-inline" onsubmit="return confirm('Zimmeti iade almak istediğinize emin misiniz?')">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn-edit" title="İade Al">
+                                                <i class="bi bi-arrow-return-left"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    <form asp-action="Sil" asp-route-id="@z.Id" method="post" class="d-inline" onsubmit="return confirm('Bu zimmet kaydını silmek istediğinize emin misiniz?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-del" title="Sil">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="bi bi-clipboard" style="font-size:44px;opacity:0.3;display:block;margin-bottom:12px;"></i>
+            <p>Henüz zimmet kaydı oluşturulmamış.</p>
+            <a asp-action="Olustur" class="btn-cyan" style="margin-top:14px;display:inline-flex;">
+                <i class="bi bi-plus-lg"></i> İlk Zimmeti Oluştur
+            </a>
+        </div>
+    }
+</div>

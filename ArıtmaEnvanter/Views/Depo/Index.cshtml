@@ -1,0 +1,193 @@
+@model List<ArıtmaEnvanter.Models.Entities.Depo>
+@{
+    ViewData["Title"] = "Depolar";
+    var tumDepolar = ViewBag.TumDepolar as List<ArıtmaEnvanter.Models.Entities.Depo> ?? new List<ArıtmaEnvanter.Models.Entities.Depo>();
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        .page-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        .date-badge {
+            background-color: #e1f5fe;
+            color: #0277bd;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .search-container {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .search-input-group {
+            flex-grow: 1;
+            position: relative;
+        }
+        .search-input-group i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+        .search-input-group input {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+        }
+        .search-input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.1);
+        }
+        
+        .depo-list-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+        
+        
+        .depo-node {
+            position: relative;
+        }
+        
+        .depo-node-child .depo-line-h {
+            position: absolute;
+            left: -30px;
+            top: 25px;
+            width: 30px;
+            height: 2px;
+            background-color: #e0e0e0;
+            z-index: 1;
+        }
+        
+        .depo-content {
+            transition: all 0.2s;
+            border-left: 4px solid transparent !important;
+        }
+        
+        .depo-node-root > .depo-content {
+            border-color: var(--accent) !important;
+        }
+        
+        .depo-content:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+        }
+
+        .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-buildings-fill me-2" style="color:var(--accent);"></i>Depo Tanımı</h2>
+        <p style="font-size:13px; color:var(--text-muted);">
+            <i class="bi bi-house-door"></i> MASKİ &rsaquo; Genel Tanımlar &rsaquo; Depo Tanımı
+        </p>
+    </div>
+    <div class="d-flex flex-column align-items-end gap-3">
+        <div class="date-badge">
+            <i class="bi bi-calendar3"></i> @DateTime.Now.ToString("dd MMMM yyyy")
+        </div>
+        <a href="/Depo/Ekle" class="btn-cyan">
+            <i class="bi bi-plus-lg"></i> Yeni Depo Ekle
+        </a>
+    </div>
+</div>
+
+@if (TempData["Basarili"] != null)
+{
+    <div class="alert-ok mb-4"><i class="bi bi-check-circle-fill"></i> @TempData["Basarili"]</div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert-err mb-4"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["Hata"]</div>
+}
+
+<form asp-action="Index" method="get" class="search-container">
+    <div class="search-input-group">
+        <i class="bi bi-search"></i>
+        <input type="text" name="arama" value="@ViewBag.Arama" placeholder="Depo adı ile ara..." />
+    </div>
+    <button type="submit" class="btn btn-outline-primary" style="font-weight:600;">
+        <i class="bi bi-funnel"></i> Filtrele
+    </button>
+    <a href="/Depo" class="btn btn-light" style="font-weight:600; color:var(--text-muted);">
+        <i class="bi bi-x"></i> Temizle
+    </a>
+</form>
+
+<div class="depo-list-card">
+    <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+        <h5 class="m-0" style="color:var(--primary); font-weight:700;">
+            <i class="bi bi-table"></i> Depo Listesi 
+            <span class="badge rounded-pill ms-2" style="background-color: var(--primary);">@(tumDepolar.Count) kayıt</span>
+        </h5>
+    </div>
+    
+    <div class="tree-container pe-2">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var rootNode in Model)
+            {
+                @await Html.PartialAsync("_DepoNode", new Tuple<ArıtmaEnvanter.Models.Entities.Depo, int, List<ArıtmaEnvanter.Models.Entities.Depo>>(rootNode, 0, tumDepolar))
+            }
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-box-seam" style="font-size: 48px; opacity:0.5;"></i>
+                <p class="mt-3" style="font-weight:600;">Görüntülenecek depo bulunamadı.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleDepoChildren(id, iconElement) {
+            var childrenContainer = document.getElementById('children-' + id);
+            if (childrenContainer) {
+                if (childrenContainer.style.display === 'none') {
+                    childrenContainer.style.display = 'block';
+                    iconElement.classList.remove('collapsed');
+                } else {
+                    childrenContainer.style.display = 'none';
+                    iconElement.classList.add('collapsed');
+                }
+            }
+        }
+    </script>
+}

@@ -1,0 +1,220 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ArıtmaEnvanter.Models.Entities.ApplicationUser> SignInManager
+@inject UserManager<ArıtmaEnvanter.Models.Entities.ApplicationUser> UserManager
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Arıtma Envanter</title>
+    <meta name="description" content="Arıtma Envanter Yönetim Sistemi" />
+
+    
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+   
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body>
+    @if (SignInManager.IsSignedIn(User))
+
+    {
+        @* *@
+        <div class="shell">
+
+            @*  *@
+            <nav class="sidebar" id="sidebar">
+                <div class="sidebar-logo" style="flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 25px 20px 20px;">
+                    <div class="logo-icon" style="width: auto; height: auto; margin-bottom: 5px; background: transparent;">
+                        <img src="~/images/image copy.png" alt="MASKİ Logo"
+                            style="max-width: 160px; height: auto; object-fit: contain; filter: brightness(0) invert(1);" />
+                    </div>
+                    <div>
+                        <div class="logo-text" style="font-size: 16px; letter-spacing: 0.5px;">Arıtma Envanter</div>
+                        <div class="logo-sub" style="font-size: 11px; opacity: 0.7;">Envanter Yönetim Sistemi</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">Ana Menü</div>
+
+                <a class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
+                    asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                @{
+                    var genelTanimlarControllers = new[] { "Form", "Depo", "RafTanim", "Firma" };
+
+                    var depoMenuControllers = new[] { "Zimmet", "Urunler", "DepoHareket" };
+
+                    var currentCtrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+
+
+                    var isGenelTanimlarActive = genelTanimlarControllers.Contains(currentCtrl);
+                }
+
+                <div class="accordion-nav">
+                    <button class="accordion-nav-header @(isGenelTanimlarActive ? "open" : "")"
+                        onclick="toggleAccordion(this)">
+                        <span><i class="bi bi-grid-1x2-fill"></i> Genel Tanımlar</span>
+                        <i class="bi bi-chevron-down acc-arrow"></i>
+                    </button>
+                    <div class="accordion-nav-body @(isGenelTanimlarActive ? "show" : "")">
+                        <a class="nav-item sub-item @(currentCtrl == "Form" ? "active" : "")" asp-controller="Form"
+                            asp-action="Index">
+                            <i class="bi bi-ui-checks-grid"></i> Malzeme Tanımı
+                        </a>
+                        <a class="nav-item sub-item @(currentCtrl == "Depo" ? "active" : "")" asp-controller="Depo"
+                            asp-action="Index">
+                            <i class="bi bi-building-fill"></i> Depo Tanımı
+                        </a>
+                        <a class="nav-item sub-item @(currentCtrl == "RafTanim" ? "active" : "")" asp-controller="RafTanim"
+                            asp-action="Index">
+                            <i class="bi bi-layout-three-columns"></i> Raf Tanımı
+                        </a>
+                        <a class="nav-item sub-item @(currentCtrl == "Firma" ? "active" : "")" asp-controller="Firma"
+                            asp-action="Index">
+                            <i class="bi bi-buildings"></i> Firma Tanımı
+                        </a>
+                    </div>
+                </div>
+
+                @{
+                    var isDepoMenuActive = depoMenuControllers.Contains(currentCtrl);
+                }
+                <div class="accordion-nav">
+                    <button class="accordion-nav-header @(isDepoMenuActive ? "open" : "")" onclick="toggleAccordion(this)">
+                        <span><i class="bi bi-box-seam"></i> Depo</span>
+                        <i class="bi bi-chevron-down acc-arrow"></i>
+                    </button>
+                    <div class="accordion-nav-body @(isDepoMenuActive ? "show" : "")">
+                        <a class="nav-item sub-item @(currentCtrl == "Zimmet" ? "active" : "")" asp-controller="Zimmet"
+                            asp-action="Index">
+                            <i class="bi bi-clipboard2-check-fill"></i> Zimmetler
+                        </a>
+                        <a class="nav-item sub-item @(currentCtrl == "Urunler" ? "active" : "")" asp-controller="Urunler"
+                            asp-action="Index">
+                            <i class="bi bi-boxes"></i> Ürünler
+                        </a>
+                        <a class="nav-item sub-item @(currentCtrl == "DepoHareket" ? "active" : "")" asp-controller="DepoHareket"
+                            asp-action="Index">
+                            <i class="bi bi-clock-history"></i> Stok Hareketleri
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">İnsan Kaynakları</div>
+
+                <a class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Personel" ? "active" : "")"
+                    asp-controller="Personel" asp-action="Index">
+                    <i class="bi bi-people-fill"></i> Personel
+                </a>
+                <a class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Birim" ? "active" : "")"
+                    asp-controller="Birim" asp-action="Index">
+                    <i class="bi bi-diagram-3-fill"></i> Birimler
+                </a>
+                
+
+
+                @if (User.IsInRole("Admin"))
+
+
+
+                {
+                    <div class="sidebar-section">Yönetim</div>
+                    <a class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")"
+                        asp-controller="Admin" asp-action="Kullanicilar">
+                        <i class="bi bi-person-gear"></i> Kullanıcılar
+                    </a>
+                }
+
+                @*  *@
+                <div class="sidebar-user">
+                    @{
+                        var currentUser = await UserManager.GetUserAsync(User);
+                        var initials = currentUser?.UserName?.Length > 0
+                        ? currentUser.UserName.Substring(0, 1).ToUpper() : "?";
+                        var roles = currentUser != null
+                        ? string.Join(", ", await UserManager.GetRolesAsync(currentUser)) : "";
+                    }
+                    <div class="avatar">@initials</div>
+                    <div class="user-info">
+                        <div class="name">@(currentUser?.UserName ?? "Kullanıcı")</div>
+                        <div class="role">@(string.IsNullOrEmpty(roles) ? "Standart" : roles)</div>
+                    </div>
+                </div>
+            </nav>
+
+            @*  *@
+            <div class="main-wrap">
+
+                @* *@
+                <div class="topbar">
+                    <div class="topbar-title">
+                        <i class="bi bi-droplet me-2" style="color:#00a8e8;"></i>
+                        @(ViewData["Title"] as string ?? "ArıtmaEnvanter")
+                    </div>
+                    <div class="topbar-actions d-flex align-items-center gap-2">
+                        <button type="button" class="topbar-btn text-primary" title="Sayfayı Rapor Olarak Yazdır" onclick="window.print()" style="font-size: 18px; color: var(--primary) !important;">
+                            <i class="bi bi-printer-fill"></i>
+                        </button>
+                        <a asp-controller="Account" asp-action="Profil" class="topbar-btn" title="Profilim">
+                            <i class="bi bi-person-circle"></i>
+                        </a>
+                        <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="topbar-btn" title="Çıkış Yap">
+                                <i class="bi bi-box-arrow-right"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                @*  *@
+                <div class="content">
+                    @* *@
+                    <div class="print-header">
+                        <img src="~/images/maskilogo.png" alt="MASKİ" class="print-logo" />
+                        <div class="print-titles">
+                            <h2>T.C. MANİSA SU VE KANALİZASYON İDARESİ GENEL MÜDÜRLÜĞÜ</h2>
+                            <h3>@(ViewData["Title"] as string ?? "Envanter ve Stok") Rapor Dökümü</h3>
+                        </div>
+                        <div class="print-meta">
+                            <strong>Tarih:</strong> @DateTime.Now.ToString("dd.MM.yyyy HH:mm")<br />
+                            <strong>Oluşturan:</strong> @User.Identity?.Name
+                        </div>
+                    </div>
+
+                    @RenderBody()
+                </div>
+            </div>
+
+        </div>
+    }
+
+
+    else
+
+    {
+        @**@
+        @RenderBody()
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        function toggleAccordion(btn) {
+            var body = btn.nextElementSibling;
+            var isOpen = btn.classList.contains('open');
+            btn.classList.toggle('open', !isOpen);
+            body.classList.toggle('show', !isOpen);
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

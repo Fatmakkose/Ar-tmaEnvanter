@@ -1,0 +1,71 @@
+@model Tuple<ArıtmaEnvanter.Models.Entities.Depo, int, List<ArıtmaEnvanter.Models.Entities.Depo>>
+@{
+    var currentNode = Model.Item1;
+    int level = Model.Item2;
+    var allNodes = Model.Item3;
+    var children = allNodes.Where(n => n.UstDepoId == currentNode.Id).OrderBy(n => n.Ad).ToList();
+    var hasChildren = children.Any();
+    
+    
+    string nodeClass = level == 0 ? "depo-node-root" : "depo-node-child";
+    string iconClass = level == 0 ? "bi bi-building-fill root-icon" : "bi bi-box child-icon";
+}
+
+<div class="depo-node @nodeClass" style="margin-left: @(level * 30)px;">
+   
+    @if(level > 0)
+    {
+        <div class="depo-line-v"></div>
+        <div class="depo-line-h"></div>
+    }
+
+    <div class="depo-content d-flex align-items-center justify-content-between p-3 mb-2 bg-white rounded shadow-sm border" style="position:relative; z-index:2;">
+        <div class="depo-info d-flex align-items-center gap-3">
+            <div class="depo-icon-box @(level == 0 ? "bg-accent text-white" : "bg-light text-secondary") rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: @(level==0 ? "var(--accent)" : "");">
+                <i class="@iconClass" style="font-size: 1.2rem;"></i>
+            </div>
+            
+            <div>
+                <strong class="@(level == 0 ? "text-primary fs-5" : "text-dark fs-6")" style="font-weight: 600;">
+                    @currentNode.Ad
+                </strong>
+                @if (currentNode.Birim != null)
+                {
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                        <i class="bi bi-diagram-3"></i> @currentNode.Birim.Ad
+                    </div>
+                }
+            </div>
+            
+            @if (hasChildren)
+            {
+                <i class="bi bi-chevron-down text-muted ms-2 toggle-icon" style="cursor: pointer; transition: transform 0.3s;" onclick="toggleDepoChildren(@currentNode.Id, this)"></i>
+            }
+        </div>
+        
+        <div class="depo-actions d-flex gap-2">
+            <a href="/Depo/Duzenle/@currentNode.Id" class="btn btn-sm btn-outline-primary border-0" title="Düzenle">
+                <i class="bi bi-pencil"></i>
+            </a>
+            <form action="/Depo/Sil/@currentNode.Id" method="post" class="d-inline" onsubmit="return confirm('@currentNode.Ad deposunu silmek istediğinize emin misiniz?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Sil">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    @if (hasChildren)
+    {
+        <div class="depo-children-container" id="children-@currentNode.Id" style="position: relative;">
+           
+            <div class="depo-children-line-v" style="position: absolute; left: 19px; top: -10px; bottom: 15px; width: 2px; background-color: #e0e0e0; z-index: 1;"></div>
+            
+            @foreach (var child in children)
+            {
+                @await Html.PartialAsync("_DepoNode", new Tuple<ArıtmaEnvanter.Models.Entities.Depo, int, List<ArıtmaEnvanter.Models.Entities.Depo>>(child, level + 1, allNodes))
+            }
+        </div>
+    }
+</div>

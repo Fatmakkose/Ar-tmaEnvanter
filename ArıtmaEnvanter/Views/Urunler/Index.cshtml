@@ -1,0 +1,1014 @@
+@model List<ArıtmaEnvanter.Models.Entities.DepoStok>
+@{
+    ViewData["Title"] = "Ürünler & Stok";
+    var depolar = ViewBag.Depolar as List<ArıtmaEnvanter.Models.Entities.Depo>;
+    var seciliDepo = ViewBag.SeciliDepo as int?;
+    var malzemeler = ViewBag.Malzemeler as List<ArıtmaEnvanter.Models.Entities.Malzeme>;
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-boxes me-2" style="color:var(--accent);"></i>Ürünler & Stok</h2>
+        <p>Depolardaki ürün stoklarını, giriş ve çıkış işlemlerini yönetin.</p>
+    </div>
+    <div class="header-actions">
+        <button type="button" class="btn btn-outline-success me-2" data-bs-toggle="modal" data-bs-target="#genelIadeModal">
+            <i class="bi bi-arrow-return-left"></i> Stok İadesi
+        </button>
+        <button type="button" class="btn btn-outline-danger me-2" data-bs-toggle="modal" data-bs-target="#genelCikisModal">
+            <i class="bi bi-box-arrow-right"></i> Stok Çıkışı
+        </button>
+        <button type="button" class="btn-cyan" data-bs-toggle="modal" data-bs-target="#girisModal">
+            <i class="bi bi-box-arrow-in-right"></i> Stok Girişi
+        </button>
+    </div>
+</div>
+
+@if (TempData["Basarili"] != null)
+{
+    <div class="alert-ok"><i class="bi bi-check-circle-fill"></i> @TempData["Basarili"]</div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert-err"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["Hata"]</div>
+}
+
+<div class="data-card mb-4" style="background:#f8faff; border:1px solid var(--border);">
+    <div style="padding:16px 20px;">
+        <form asp-action="Index" method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label" style="font-size:12px; font-weight:700; color:var(--primary);">Depo Seçiniz:</label>
+                <select name="depoId" class="form-select">
+                    <option value="">Tümü</option>
+                    @if (depolar != null)
+                    {
+                        foreach (var d in depolar)
+                        {
+                            <option value="@d.Id" selected="@(seciliDepo == d.Id ? "selected" : null)">@d.Ad</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label" style="font-size:12px; font-weight:700; color:var(--primary);">Ürün Ara:</label>
+                <div class="search-box" style="width:100%;">
+                    <i class="bi bi-search"></i>
+                    <input type="text" name="arama" value="@ViewBag.Arama" placeholder="Ürün Ara..." />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn-action w-100">Filtrele / Ara</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="data-card">
+        <div class="data-card-head">
+            <h6><i class="bi bi-boxes"></i> Ürün Stok Listesi <span class="record-count">0 kayıt</span></h6>
+        </div>
+        <div class="empty-state">
+            <i class="bi bi-inboxes" style="font-size:48px; color:var(--accent); opacity:0.4;"></i>
+            <p class="mt-3" style="font-size:15px; font-weight:600; color:var(--text-muted);">Gösterilecek stok kaydı bulunamadı.</p>
+            <p style="font-size:13px; color:var(--text-muted);">Yukarıdan Stok Girişi yaparak yeni ürünler ekleyebilirsiniz.</p>
+        </div>
+    </div>
+}
+else
+{
+    var groupedStoklar = Model.GroupBy(s => s.RafTanim).OrderBy(g => g.Key?.Ad ?? "zzz_Tanımsız").ToList();
+
+    foreach (var group in groupedStoklar)
+    {
+        var rafAdi = group.Key?.Ad ?? "Genel Alan / Tanımsız Raf";
+        
+        <div class="data-card mb-4" style="border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+            <div class="data-card-head d-flex justify-content-between align-items-center" style="background-color: var(--primary); color: white; border-radius: 8px 8px 0 0; padding: 12px 20px; margin-bottom: 0;">
+                <h6 class="m-0" style="color: white; font-weight: 700;"><i class="bi bi-collection"></i> @rafAdi <span class="badge bg-light text-dark ms-2">@group.Count() ürün</span></h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle m-0" style="border-radius: 0 0 8px 8px;">
+                    <thead style="background:#f8faff;">
+                        <tr>
+                            <th>Ürün Adı</th>
+                            <th>İşlem Yapan Kişi</th>
+                            <th>Miktar</th>
+                            <th>Birim</th>
+                            <th>Son Güncelleme</th>
+                            <th style="text-align:right;">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var stok in group)
+                        {
+                            <tr>
+                                <td style="font-weight:700; color:var(--primary);">
+                                    @(stok.UrunAdi ?? stok.Malzeme?.Ad)
+                                    @if (!string.IsNullOrEmpty(stok.RafNo))
+                                    {
+                                        <div style="font-size:11px; color:#888;">Raf No: @stok.RafNo</div>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border"><i class="bi bi-person me-1"></i> @(stok.IslemYapanKisi ?? "Belirtilmemiş")</span>
+                                </td>
+                                <td>
+                                    <span style="font-size:15px; font-weight:800; color:@(stok.Miktar > 10 ? "var(--success)" : (stok.Miktar > 0 ? "var(--warning)" : "var(--danger)"));">@stok.Miktar</span>
+                                    @if (stok.Miktar <= 10)
+                                    {
+                                        <br/><span class="badge bg-warning text-dark mt-1" style="font-size:11px; font-weight:600;"><i class="bi bi-exclamation-triangle-fill"></i> Kritik Stok</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">@(stok.Birim ?? "Adet")</span>
+                                </td>
+                                <td style="font-size:12px; color:var(--text-muted);">
+                                    @stok.GuncellemeTarihi.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                </td>
+                                <td style="text-align:right;">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#artirModal@(stok.Id)" title="Stok Ekle / Giriş" style="padding:4px 8px; font-size:12px;">
+                                            <i class="bi bi-plus-circle"></i> Giriş
+                                        </button>
+                                        @if (stok.Miktar > 0)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cikisModal@(stok.Id)" title="Stok Çıkış" style="padding:4px 8px; font-size:12px;">
+                                                <i class="bi bi-box-arrow-right"></i> Çıkış
+                                            </button>
+                                        }
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#iadeModal@(stok.Id)" title="İade Al" style="padding:4px 8px; font-size:12px;">
+                                            <i class="bi bi-arrow-return-left"></i> İade
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#guncelleModal@(stok.Id)" title="Kayıt Yeri ve Ürün Güncelle" style="padding:4px 8px; font-size:12px;">
+                                            <i class="bi bi-pencil-square"></i> Düzenle
+                                        </button>
+                                        <form asp-action="Sil" asp-route-id="@stok.Id" method="post" class="d-inline" onsubmit="return confirm('Bu hatalı ürün girişini tamamen silmek istediğinize emin misiniz? (Tüm stok bilgisi silinir)')">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-dark" title="Hatalı Kaydı Sil" style="padding:4px 8px; font-size:12px; margin-left: -1px; border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                                <i class="bi bi-trash"></i> Sil
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    
+                                    <div class="modal fade text-start" id="artirModal@(stok.Id)" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header border-0 bg-light">
+                                                    <h5 class="modal-title fw-bold" style="color:var(--success);"><i class="bi bi-plus-circle"></i> Mevcut Stoğa Giriş Yap</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form asp-action="StokArtir" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="stokId" value="@stok.Id" />
+                                                    <div class="modal-body p-4">
+                                                        <p><strong>@(stok.UrunAdi ?? stok.Malzeme?.Ad)</strong> ürününe manuel stok ekliyorsunuz.</p>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold" style="font-size:13px;">Eklenecek Miktar <span class="text-danger">*</span></label>
+                                                            <input type="number" step="0.01" name="miktar" class="form-control" required min="0.01" />
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold" style="font-size:13px;">Açıklama (Opsiyonel)</label>
+                                                            <textarea name="aciklama" class="form-control" rows="2"></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer border-0">
+                                                        <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Stoğa Ekle</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                  
+                                    <div class="modal fade text-start" id="iadeModal@(stok.Id)" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header border-0" style="background-color:#f0f2f5;">
+                                                    <h5 class="modal-title fw-bold" style="color:var(--secondary);"><i class="bi bi-arrow-return-left"></i> Ürün İadesi Al</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form asp-action="IadeAl" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="stokId" value="@stok.Id" />
+                                                    <div class="modal-body p-4">
+                                                        <div class="alert alert-secondary py-2" style="font-size:13px;"><i class="bi bi-info-circle"></i> Sahadan/personelden dönen ürünü depoya tekrar alıyorsunuz.</div>
+                                                        <p><strong>@(stok.UrunAdi ?? stok.Malzeme?.Ad)</strong></p>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold" style="font-size:13px;">İade Edilen Miktar <span class="text-danger">*</span></label>
+                                                            <input type="number" step="0.01" name="miktar" class="form-control" required min="0.01" />
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold" style="font-size:13px;">İade Nedeni / Notu</label>
+                                                            <textarea name="aciklama" class="form-control" rows="2"></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer border-0">
+                                                        <button type="submit" class="btn btn-secondary text-white"><i class="bi bi-check-lg"></i> İadeyi Sisteme Ekle</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    
+                                    <div class="modal fade text-start" id="guncelleModal@(stok.Id)" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header border-0 bg-light">
+                                                    <h5 class="modal-title fw-bold" style="color:var(--info);"><i class="bi bi-pencil-square"></i> Ürün Adı ve Raf Güncelleme</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form asp-action="Guncelle" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="stokId" value="@stok.Id" />
+                                                    <div class="modal-body p-4">
+                                                        <p><strong>@(stok.UrunAdi ?? stok.Malzeme?.Ad)</strong> ürününün bilgilerini değiştiriyorsunuz.</p>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold" style="font-size:13px;">Ürün Adı (Düzenlenebilir)</label>
+                                                            <input type="text" name="urunAdi" value="@stok.UrunAdi" class="form-control" placeholder="Örn: 3 İp Polo Yaka Tişört (L Beden)..." />
+                                                            <small class="text-muted" style="font-size:11px;">Yanlış girilmiş ürün adını veya özelliklerini buradan düzeltebilirsiniz.</small>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold" style="font-size:13px;">Yeni Raf Seçin</label>
+                                                            <select name="rafTanimId" class="form-select">
+                                                                <option value="">-- Raf Seçimi Yok / Genel Alan --</option>
+                                                                @if (ViewBag.Raflar != null)
+                                                                {
+                                                                    foreach (var r in ViewBag.Raflar)
+                                                                    {
+                                                                        <option value="@r.Id" selected="@(stok.RafTanimId == r.Id ? "selected" : null)">@r.Ad</option>
+                                                                    }
+                                                                }
+                                                            </select>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-bold" style="font-size:13px;">Yeni Raf Numarası</label>
+                                                            <input type="text" name="rafNo" value="@stok.RafNo" class="form-control" placeholder="Örn: B-14, Dolap 2..." />
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer border-0">
+                                                        <button type="submit" class="btn btn-info text-white"><i class="bi bi-check-lg"></i> Güncelle</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                   
+                                    @if(stok.Miktar > 0)
+                                    {
+                                        <div class="modal fade text-start" id="cikisModal@(stok.Id)" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header border-0 bg-light">
+                                                        <h5 class="modal-title fw-bold" style="color:var(--danger);"><i class="bi bi-box-arrow-right"></i> Stok Çıkışı</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <form asp-action="Cikis" method="post">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="stokId" value="@stok.Id" />
+                                                        <div class="modal-body p-4">
+                                                            <p style="font-size:14px; margin-bottom:20px;">
+                                                                <strong>@(stok.UrunAdi ?? stok.Malzeme?.Ad)</strong> ürününden çıkış yapıyorsunuz.<br>
+                                                                Mevcut Stok: <strong style="color:var(--success);">@stok.Miktar @stok.Birim</strong>
+                                                            </p>
+
+                                                            <div class="mb-3 border rounded p-3 bg-light">
+                                                                <label class="form-label fw-bold text-dark" style="font-size:13px;">Çıkış Türü Seçiniz <span class="text-danger">*</span></label>
+                                                                <div class="form-check mb-2">
+                                                                    <input class="form-check-input cikis-turu-radio" type="radio" name="cikisTuru" id="turTuketim@(stok.Id)" value="Tüketim" data-target="personelDiv@(stok.Id)" checked>
+                                                                    <label class="form-check-label" for="turTuketim@(stok.Id)">
+                                                                        Sarf / Tüketim Çıkışı
+                                                                    </label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input class="form-check-input cikis-turu-radio" type="radio" name="cikisTuru" id="turDemirbas@(stok.Id)" value="Demirbaş" data-target="personelDiv@(stok.Id)">
+                                                                    <label class="form-check-label text-danger fw-bold" for="turDemirbas@(stok.Id)">
+                                                                        Demirbaş (Personele Zimmetle)
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="mb-3 template-personel" id="personelDiv@(stok.Id)" style="display:none; transition: all 0.3s; background:#fff2f2; border:1px solid #ffcdcd; border-radius:6px; padding:12px;">
+                                                                <label class="form-label fw-bold" style="font-size:13px; color:var(--danger);">Zimmetlenecek Personel <span class="text-danger">*</span></label>
+                                                                <select name="personelId" class="form-select border-danger personel-select">
+                                                                    <option value="">-- Personel Seçin --</option>
+                                                                    @if (ViewBag.Personeller != null)
+                                                                    {
+                                                                        foreach (var p in ViewBag.Personeller)
+                                                                        {
+                                                                            <option value="@p.Id">@p.AdSoyad</option>
+                                                                        }
+                                                                    }
+                                                                </select>
+                                                                <small class="text-muted d-block mt-2" style="font-size:11px;">Çıkışı yapılan miktar kadar birim veya personelin zimmet envanterine kaydedilir.</small>
+                                                            </div>
+
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold" style="font-size:13px;">Çıkış Miktarı <span class="text-danger">*</span></label>
+                                                                <input type="number" step="0.01" name="miktar" class="form-control" required min="0.01" max="@stok.Miktar" placeholder="Örn: 2" />
+                                                            </div>
+
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold" style="font-size:13px;">Açıklama / Çıkış Nedeni (Opsiyonel)</label>
+                                                                <textarea name="aciklama" class="form-control" rows="2" placeholder="Nereye/Kime çıkış yapıldı?"></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-0">
+                                                            <button type="submit" class="btn btn-danger"><i class="bi bi-box-arrow-right"></i> Çıkışı Onayla</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+}
+
+
+<div class="modal fade" id="girisModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0" style="background:#f8faff;">
+                <h5 class="modal-title" style="color:var(--primary); font-weight:700;">
+                    <i class="bi bi-box-arrow-in-right"></i> Yeni Stok Girişi
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="Giris" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="malzemeId" id="malzemeIdHidden" value="" />
+                <div class="modal-body p-4">
+                    
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight:600; font-size:13px;">Ürün Seç <span style="color:var(--danger)">*</span></label>
+                        <div style="position:relative;" id="malzemeSecimAlani">
+                            <input type="text" id="malzemeArama" class="form-control" placeholder="Malzeme adı yazarak arayın..." autocomplete="off" />
+                            <div id="malzemeListesi" style="display:none; border:1px solid var(--border); border-radius:8px; max-height:200px; overflow-y:auto; background:#fff; box-shadow:0 4px 16px rgba(0,0,0,0.10); margin-top:4px; position:absolute; width:100%; z-index:1000;">
+                                @if (malzemeler != null)
+                                {
+                                    foreach (var m in malzemeler)
+                                    {
+                                        <div class="malzeme-item" data-id="@m.Id" data-ad="@m.Ad" data-alt="@m.AlternatifAd" data-tur="@m.MalzemeTuru"
+                                             style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid #f0f0f0; transition:background 0.15s;">
+                                            <i class="bi bi-box-seam me-2" style="color:var(--accent);"></i>
+                                            <strong>@m.Ad</strong>
+                                            @if (!string.IsNullOrEmpty(m.AlternatifAd)) { <span style="color:var(--text-muted); font-size:12px;"> (@m.AlternatifAd)</span> }
+                                            @if (!string.IsNullOrEmpty(m.MalzemeTuru)) { <span class="badge bg-light text-secondary ms-1" style="font-size:11px;">@m.MalzemeTuru</span> }
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                        <div id="malzemeSeciliInfo" style="display:none; margin-top:10px; padding:10px 14px; background:#e8f4fd; border-radius:8px; border:1px solid #b3d8f5; font-size:13px;">
+                            <i class="bi bi-check-circle-fill" style="color:var(--accent);"></i>
+                            <strong id="malzemeSeciliAd"></strong>
+                            <span id="malzemeSeciliDetay" style="color:var(--text-muted); margin-left:6px;"></span>
+                            <button type="button" id="malzemeSifirla" style="float:right; background:none; border:none; color:var(--danger); cursor:pointer; font-size:12px;">✕ Değiştir</button>
+                        </div>
+                    </div>
+
+                   
+                    <div id="malzemeBilgiKarti" style="display:none; margin-bottom:16px; padding:12px 16px; background:#f8faff; border-radius:8px; border:1px solid var(--border);">
+                        <div style="font-size:12px; font-weight:700; color:var(--primary); margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;"><i class="bi bi-info-circle"></i> Malzeme Bilgileri</div>
+                        <div id="malzemeBilgiIcerik" style="font-size:13px; color:var(--text-muted);"></div>
+                    </div>
+
+              
+                    <div class="mb-2">
+                        <label class="form-label" style="font-weight:600; font-size:13px;">Raf Seçin (Opsiyonel)</label>
+                        <select name="rafTanimId" class="form-select">
+                            <option value="">-- Raf Seçin --</option>
+                            @if (ViewBag.Raflar != null)
+                            {
+                                foreach (var r in ViewBag.Raflar)
+                                {
+                                    <option value="@r.Id">@r.Ad</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                   
+
+                    <div id="kimyasalHesaplamaAlani" style="display:none; background: #fff8e1; padding: 12px; border-radius: 8px; border: 1px solid #ffe082; margin-bottom: 15px;">
+                        <label class="form-label fw-bold" style="font-size:12px; color: #795548;">
+                            <i class="bi bi-calculator-fill me-1"></i> Kimyasal Bidon Hesabı (1 Bidon = 25 KG)
+                        </label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" id="bidonAdetInput" class="form-control" placeholder="Kaç bidon?">
+                            <span class="input-group-text bg-white">Adet</span>
+                        </div>
+                        <div style="font-size: 11px; color: #a1887f; margin-top: 5px;">
+                            <i class="bi bi-info-circle"></i> Girilen adet x 25 KG olarak aşağıya yazılacaktır.
+                        </div>
+                    </div>
+
+                    
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight:600; font-size:13px;">Raf Numarası (Opsiyonel)</label>
+                        <input type="text" name="rafNo" class="form-control" placeholder="Örn: A-12, Raf-3..." />
+                    </div>
+
+                   
+                    <div id="dynamic-fields-container" class="mb-3"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight:600; font-size:13px;">Gönderen Yer (Firma)</label>
+                        <select name="firmaId" class="form-select">
+                            <option value="">-- Firma Seçin (İsteğe Bağlı) --</option>
+                            @if (ViewBag.Firmalar != null)
+                            {
+                                foreach (var f in ViewBag.Firmalar)
+                                {
+                                    <option value="@f.Id">@f.FirmaAdi</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight:600; font-size:13px;">Giriş Miktarı <span style="color:var(--danger)">*</span></label>
+                        <input type="number" step="0.01" name="miktar" class="form-control" required min="0.01" placeholder="Örn: 10" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight:600; font-size:13px;">Açıklama (Opsiyonel)</label>
+                        <textarea name="aciklama" class="form-control" rows="2" placeholder="Giriş ile ilgili notlar..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" id="girisKaydetBtn" class="btn-cyan" disabled><i class="bi bi-check-lg"></i> Girişi Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="genelCikisModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0" style="background:#fff2f2;">
+                <h5 class="modal-title" style="color:var(--danger); font-weight:700;">
+                    <i class="bi bi-box-arrow-right"></i> Yeni Stok Çıkışı (Çoklu İşlem)
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="TopluCikis" method="post" id="topluCikisForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body p-4">
+
+                    <div class="mb-3 p-3 rounded" style="background:#f8f9fa; border:1px solid #ddd;">
+                        <label class="form-label" style="font-weight:700; font-size:13px; color:var(--primary);">
+                            <i class="bi bi-box-seam text-danger me-1"></i> Ürün Seçiniz
+                        </label>
+
+                        <div class="mb-3">
+                            <select id="cikisMalzemeSelect" class="form-select border-danger" style="font-size:14px;">
+                                <option value="">-- Çıkış Yapılacak Ürünü Seçin --</option>
+                                @if (ViewBag.StoktakiMalzemeler != null)
+                                {
+                                    foreach (var m in (List<ArıtmaEnvanter.Models.Entities.Malzeme>)ViewBag.StoktakiMalzemeler)
+                                    {
+                                        <option value="@m.Id">@m.Ad @(!string.IsNullOrEmpty(m.AlternatifAd) ? $"({m.AlternatifAd})" : "")</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div id="cikisMalzemeSeciliInfo" style="display:none; margin-bottom:10px; padding:10px 14px; background:#fff5f5; border-radius:8px; border:1px solid #ffcdcd; font-size:13px;">
+                            <i class="bi bi-check-circle-fill text-danger"></i>
+                            <strong id="cikisMalzemeSeciliAd"></strong>
+                            <button type="button" id="cikisMalzemeSifirla" style="float:right; background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px;">✕ Değiştir</button>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label text-muted" style="font-size:12px;">Çıkış Yapılacak Raf (Stok Kaydı) <span class="text-danger">*</span></label>
+                            <select id="cikisStokSelect" class="form-select form-select-sm border-danger" disabled>
+                                <option value="">Önce ürün seçiniz...</option>
+                            </select>
+                            <small id="cikisMevcutStokBilgi" class="text-muted d-block mt-1" style="font-size:11px;"></small>
+                        </div>
+
+                        <div class="row g-2 align-items-end">
+                            <div class="col-5">
+                                <label class="form-label text-muted" style="font-size:12px;">Miktar <span class="text-danger">*</span></label>
+                                <input type="number" step="1" id="genelCikisMiktar" class="form-control form-control-sm" min="1" placeholder="Miktar" disabled />
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label text-muted" style="font-size:12px;" >Çıkış Türü</label>
+                                <select id="genelCikisTuru" class="form-select form-select-sm"  disabled>
+                                    <option value="Tüketim">Sarf / Tüketim</option>
+                                    <option value="Demirbaş">Demirbaş (Zimmet)</option>
+                                </select>
+                            </div>
+                            <div class="col-3">
+                                <button type="button" id="btnListeyeEkle" class="btn btn-sm btn-outline-danger w-100" disabled>
+                                    <i class="bi bi-plus-circle"></i> Ekle
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold mb-2 text-danger border-bottom pb-2">Çıkış Yapılacak Ürünler Listesi</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm table-bordered align-middle" id="topluCikisTablosu" style="font-size:13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ürün</th>
+                                    <th>Raf</th>
+                                    <th>Tür</th>
+                                    <th style="width:80px;">Miktar</th>
+                                    <th style="width:40px; text-align:center;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr id="bosListeSatiri">
+                                    <td colspan="5" class="text-center text-muted py-3">Listeye henüz ürün eklenmedi.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div id="gizliGirdilerMekani"></div>
+
+                    <div class="mb-3 p-3 rounded" style="background:#f0f7ff; border:1px solid #cfe2ff; display:none;" id="genelPersonelDiv">
+                        <label class="form-label fw-bold" style="font-size:13px; color:#084298;">
+                            <i class="bi bi-person-check-fill me-1"></i> Teslim Alan Personel <span class="text-danger">*</span>
+                        </label>
+                        <select id="genelPersonelSelect" name="personelId" class="form-select border-primary">
+                            <option value="">-- Personel Seçiniz --</option>
+                            @if (ViewBag.Personeller != null)
+                            {
+                                foreach (var p in (List<ArıtmaEnvanter.Models.Entities.Personel>)ViewBag.Personeller)
+                                {
+                                    <option value="@p.Id">@p.AdSoyad</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight:600; font-size:13px;">Açıklama / Çıkış Nedeni (Opsiyonel)</label>
+                        <textarea name="aciklama" class="form-control" rows="2" placeholder="Nereye/Kime çıkış yapıldı?"></textarea>
+                    </div>
+
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" id="genelCikisKaydetBtn" class="btn btn-danger" disabled>
+                        <i class="bi bi-box-arrow-right"></i> Çıkışı Onayla
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="genelIadeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header border-0" style="background:#e8f5e9;">
+                <h5 class="modal-title" style="color:var(--success); font-weight:700;">
+                    <i class="bi bi-arrow-return-left"></i> Toplu Stok İadesi (Belge ile)
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="TopluIade" method="post" id="topluIadeForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body p-4">
+                    <div class="mb-4 p-3 rounded" style="background:#f8f9fa; border:1px solid #ddd;">
+                        <label class="form-label fw-bold text-success" style="font-size:13px;"><i class="bi bi-search"></i> Çıkış Form Numarası (Belge No) ile iade edilecek ürünleri bulun</label>
+                        <div class="input-group">
+                            <input type="text" id="iadeSorguFormNo" name="cikisFormNo" class="form-control" placeholder="Örn: TÇKS-260323... veya ÇKS-..." required />
+                            <button type="button" class="btn btn-success px-4" id="btnIadeSorgula">Sorgula</button>
+                        </div>
+                        <small class="text-muted d-block mt-1" style="font-size:11px;">Çıkış belgesinde yazan Belge No'yu eksiksiz girin.</small>
+                    </div>
+
+                    <div id="iadeUrunlerKonteyner" style="display:none;">
+                        <h6 class="fw-bold mb-2 text-success border-bottom pb-2">İşleme Ait Çıkış Yapılmış Ürünler</h6>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-sm table-bordered align-middle" id="iadeTablosu" style="font-size:13px;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Ürün Adı</th>
+                                        <th>Çıkılan Raf</th>
+                                        <th style="width:100px;">Çıkış Miktarı</th>
+                                        <th style="width:120px;">İade Miktarı</th>
+                                        <th style="width:150px;">İade Edilecek Raf</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="iadeGizliAlanlar"></div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label" style="font-weight:600; font-size:13px;">Açıklama / İade Nedeni</label>
+                            <textarea name="aciklama" class="form-control" rows="2" placeholder="İade nedeni nedir?"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" id="genelIadeKaydetBtn" class="btn btn-success" disabled><i class="bi bi-arrow-return-left"></i> İadeyi Onayla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <style>
+        .malzeme-item:hover { background: #e8f4fd !important; }
+        .malzeme-item.active { background: #d0eaff !important; font-weight: 600; }
+    </style>
+}
+    <script>
+        
+        (function() {
+            var malzemeArama = document.getElementById('malzemeArama');
+            var malzemeListesi = document.getElementById('malzemeListesi');
+            var malzemeIdHidden = document.getElementById('malzemeIdHidden');
+            var malzemeSeciliInfo = document.getElementById('malzemeSeciliInfo');
+            var malzemeSeciliAd = document.getElementById('malzemeSeciliAd');
+            var malzemeSifirla = document.getElementById('malzemeSifirla');
+            var malzemeBilgiKarti = document.getElementById('malzemeBilgiKarti');
+            var malzemeBilgiIcerik = document.getElementById('malzemeBilgiIcerik');
+            var container = document.getElementById('dynamic-fields-container');
+            var girisKaydetBtn = document.getElementById('girisKaydetBtn');
+
+            if (malzemeArama) {
+                malzemeArama.addEventListener('focus', function() {
+                    malzemeListesi.style.display = 'block';
+                });
+
+                malzemeArama.addEventListener('input', function() {
+                    var filter = this.value.toLocaleLowerCase('tr-TR');
+                    var items = malzemeListesi.querySelectorAll('.malzeme-item');
+                    var count = 0;
+                    items.forEach(function(item) {
+                        var text = (item.getAttribute('data-ad') + ' ' + (item.getAttribute('data-alt') || '')).toLocaleLowerCase('tr-TR');
+                        if (text.indexOf(filter) > -1) {
+                            item.style.display = '';
+                            count++;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                    malzemeListesi.style.display = count > 0 ? 'block' : 'none';
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!malzemeArama.contains(e.target) && !malzemeListesi.contains(e.target)) {
+                        malzemeListesi.style.display = 'none';
+                    }
+                });
+            }
+
+            malzemeListesi?.addEventListener('click', function(e) {
+                var item = e.target.closest('.malzeme-item');
+                if (item) {
+                    var id = item.getAttribute('data-id');
+                    var ad = item.getAttribute('data-ad');
+                    var alt = item.getAttribute('data-alt');
+                    
+                    secMalzeme(id, ad, alt);
+                }
+            });
+
+            function secMalzeme(id, ad, alt) {
+                malzemeIdHidden.value = id;
+                malzemeSeciliAd.textContent = ad;
+                if (alt) {
+                    document.getElementById('malzemeSeciliDetay').textContent = '(' + alt + ')';
+                } else {
+                    document.getElementById('malzemeSeciliDetay').textContent = '';
+                }
+                
+                document.getElementById('malzemeSecimAlani').style.display = 'none';
+                malzemeSeciliInfo.style.display = 'block';
+                girisKaydetBtn.disabled = false;
+
+                
+                malzemeBilgiKarti.style.display = 'none';
+                container.innerHTML = '<div style="text-align:center; padding:10px; color:var(--text-muted); font-size:13px;"><i class="bi bi-hourglass-split"></i> Form alanları yükleniyor...</div>';
+                
+                fetch(`/Urunler/GetMalzemeFormAlanlari?malzemeId=${id}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        container.innerHTML = '';
+                        if (data.success) {
+                           
+                            if (data.malzeme) {
+                                var bilgiHtml = '';
+                                if (data.malzeme.aciklama) bilgiHtml += `<div class="mb-1"><i class="bi bi-card-text me-1"></i>${data.malzeme.aciklama}</div>`;
+                                if (data.malzeme.kategori) bilgiHtml += `<div><i class="bi bi-tag me-1"></i>Kategori: <strong>${data.malzeme.kategori}</strong></div>`;
+                                if (data.malzeme.malzemeTuru) bilgiHtml += `<div class="mt-1"><i class="bi bi-info-circle me-1"></i>Tür: <span class="badge bg-light text-dark">${data.malzeme.malzemeTuru}</span></div>`;
+                                
+                                if (bilgiHtml) {
+                                    malzemeBilgiIcerik.innerHTML = bilgiHtml;
+                                    malzemeBilgiKarti.style.display = 'block';
+                                }
+                            }
+
+                         
+                            if (data.alanlar && data.alanlar.length > 0) {
+                                data.alanlar.forEach(alan => {
+                                    var fieldHtml = `<div class="mb-3">
+                                        <label class="form-label" style="font-weight:600; font-size:13px;">${alan.alanAdi} ${alan.gerekli ? '<span class="text-danger">*</span>' : ''}</label>`;
+                                    
+                                    if (alan.alanTipi === 'Metin' || alan.alanTipi === 'Uzun Metin') {
+                                        fieldHtml += `<input type="text" name="DynamicField_${alan.id}" class="form-control" ${alan.gerekli ? 'required' : ''} />`;
+                                    } else if (alan.alanTipi === 'Sayı') {
+                                        fieldHtml += `<input type="number" step="any" name="DynamicField_${alan.id}" class="form-control" ${alan.gerekli ? 'required' : ''} />`;
+                                    } else if (alan.alanTipi === 'Tarih') {
+                                        fieldHtml += `<input type="date" name="DynamicField_${alan.id}" class="form-control" ${alan.gerekli ? 'required' : ''} />`;
+                                    } else if (alan.alanTipi === 'Seçenek' && alan.secenekler) {
+                                        var opts = alan.secenekler.split(',');
+                                        fieldHtml += `<select name="DynamicField_${alan.id}" class="form-select" ${alan.gerekli ? 'required' : ''}><option value="">-- Seçiniz --</option>`;
+                                        opts.forEach(o => { fieldHtml += `<option value="${o.trim()}">${o.trim()}</option>`; });
+                                        fieldHtml += `</select>`;
+                                    } else {
+                                        fieldHtml += `<input type="text" name="DynamicField_${alan.id}" class="form-control" ${alan.gerekli ? 'required' : ''} />`;
+                                    }
+                                    
+                                    fieldHtml += `</div>`;
+                                    container.insertAdjacentHTML('beforeend', fieldHtml);
+                                });
+                            }
+                        } else {
+                            container.innerHTML = '<div class="alert alert-warning py-2 small">Form alanları yüklenemedi.</div>';
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        container.innerHTML = '<div class="alert alert-danger py-2 small">Bir hata oluştu.</div>';
+                    });
+            }
+
+            malzemeSifirla?.addEventListener('click', function() {
+                document.getElementById('malzemeSecimAlani').style.display = 'block';
+                malzemeSeciliInfo.style.display = 'none';
+                malzemeIdHidden.value = '';
+                malzemeArama.value = '';
+                malzemeBilgiKarti.style.display = 'none';
+                container.innerHTML = '';
+                girisKaydetBtn.disabled = true;
+            });
+        })();
+
+        
+        (function() {
+            var cikisSelect = document.getElementById('cikisMalzemeSelect');
+            var cikisStokSelect = document.getElementById('cikisStokSelect');
+            var cikisMiktarInput = document.getElementById('genelCikisMiktar');
+            var btnListeyeEkle = document.getElementById('btnListeyeEkle');
+            var cikisSeciliInfo = document.getElementById('cikisMalzemeSeciliInfo');
+            var cikisSeciliAd = document.getElementById('cikisMalzemeSeciliAd');
+            var cikisSifirlaBtn = document.getElementById('cikisMalzemeSifirla');
+
+            if (cikisSelect) {
+                cikisSelect.addEventListener('change', function() {
+                    var id = this.value;
+                    var ad = this.options[this.selectedIndex].text;
+                    if (id) {
+                       
+                        this.parentElement.style.display = 'none';
+                        cikisSeciliInfo.style.display = 'block';
+                        cikisSeciliAd.textContent = ad;
+                        
+                        
+                        secCikisMalzeme(id, ad);
+                    }
+                });
+            }
+
+            function secCikisMalzeme(id, ad) {
+                cikisStokSelect.innerHTML = '<option value="">Stoklar aranıyor...</option>';
+                cikisStokSelect.disabled = true;
+
+                fetch(`/Urunler/GetMalzemeMevcutStoklar?malzemeId=${id}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success && data.stoklar.length > 0) {
+                            var html = '<option value="">-- Raf/Stok Kaydı Seçin --</option>';
+                            data.stoklar.forEach(s => {
+                                html += `<option value="${s.id}" data-max="${s.miktar}" data-raf-text="${s.rafAd}" data-urun-adi="${s.urunAdi}">${s.urunAdi} - Raf: ${s.rafAd} (${s.rafNo || 'No Yok'}) - Mevcut: ${s.miktar}</option>`;
+                            });
+                            cikisStokSelect.innerHTML = html;
+                            cikisStokSelect.disabled = false;
+                        } else {
+                            cikisStokSelect.innerHTML = '<option value="">Stok bulunamadı!</option>';
+                        }
+                    });
+            }
+
+           
+            if (cikisStokSelect) {
+                cikisStokSelect.addEventListener('change', function() {
+                    var selectedOpt = this.options[this.selectedIndex];
+                    var maxMiktar = selectedOpt ? selectedOpt.getAttribute('data-max') : null;
+                    var mevcutBilgi = document.getElementById('cikisMevcutStokBilgi');
+                    var cikisTuruSelect = document.getElementById('genelCikisTuru');
+
+                    if (this.value && maxMiktar) {
+                        cikisMiktarInput.disabled = false;
+                        cikisMiktarInput.max = maxMiktar;
+                        cikisMiktarInput.placeholder = 'Maks: ' + maxMiktar;
+                        if (cikisTuruSelect) cikisTuruSelect.disabled = false;
+                        btnListeyeEkle.disabled = false;
+                        if (mevcutBilgi) mevcutBilgi.textContent = 'Mevcut stok: ' + maxMiktar + ' adet';
+                    } else {
+                        cikisMiktarInput.disabled = true;
+                        cikisMiktarInput.max = '';
+                        cikisMiktarInput.placeholder = 'Miktar';
+                        if (cikisTuruSelect) cikisTuruSelect.disabled = true;
+                        btnListeyeEkle.disabled = true;
+                        if (mevcutBilgi) mevcutBilgi.textContent = '';
+                    }
+                });
+            }
+
+            function sifirlaSecimAlani() {
+                cikisSelect.parentElement.style.display = 'block';
+                cikisSelect.value = '';
+                cikisSeciliInfo.style.display = 'none';
+                cikisStokSelect.innerHTML = '<option value="">Önce ürün seçiniz...</option>';
+                cikisStokSelect.disabled = true;
+                cikisMiktarInput.value = '';
+                cikisMiktarInput.disabled = true;
+                cikisMiktarInput.max = '';
+                cikisMiktarInput.placeholder = 'Miktar';
+                var cikisTuruSelect = document.getElementById('genelCikisTuru');
+                if (cikisTuruSelect) cikisTuruSelect.disabled = true;
+                btnListeyeEkle.disabled = true;
+                var mevcutBilgi = document.getElementById('cikisMevcutStokBilgi');
+                if (mevcutBilgi) mevcutBilgi.textContent = '';
+            }
+
+            cikisSifirlaBtn?.addEventListener('click', sifirlaSecimAlani);
+
+            var listeSayac = 0;
+            if (btnListeyeEkle) {
+                btnListeyeEkle.addEventListener('click', function() {
+                    var stokOpt = cikisStokSelect.options[cikisStokSelect.selectedIndex];
+                    var stokId = cikisStokSelect.value;
+                    var rafText = stokOpt ? stokOpt.getAttribute('data-raf-text') : '';
+                    var maxMiktar = stokOpt ? parseFloat(stokOpt.getAttribute('data-max')) : 0;
+                    var miktar = parseFloat(cikisMiktarInput.value);
+                    var cikisTuruSelect = document.getElementById('genelCikisTuru');
+                    var tur = cikisTuruSelect ? cikisTuruSelect.value : 'Tüketim';
+                    var urunAdi = stokOpt ? stokOpt.getAttribute('data-urun-adi') : cikisSeciliAd.textContent;
+
+                    if (!stokId || isNaN(miktar) || miktar <= 0) {
+                        alert('Lütfen raf/stok kaydı seçin ve geçerli bir miktar girin.');
+                        return;
+                    }
+                    if (miktar > maxMiktar) {
+                        alert('Girilen miktar mevcut stoktan (' + maxMiktar + ') fazla olamaz!');
+                        return;
+                    }
+
+                    var bosListeSatiri = document.getElementById('bosListeSatiri');
+                    if (bosListeSatiri) bosListeSatiri.style.display = 'none';
+
+                    var tbody = document.querySelector('#topluCikisTablosu tbody');
+                    var satir = document.createElement('tr');
+                    satir.setAttribute('data-satir-id', listeSayac);
+                    satir.innerHTML =
+                        '<td><strong>' + urunAdi + '</strong></td>' +
+                        '<td>' + (rafText || 'Genel Alan') + '</td>' +
+                        '<td><span class="badge ' + (tur === 'Demirbaş' ? 'bg-danger' : 'bg-secondary') + '">' + tur + '</span></td>' +
+                        '<td>' + miktar + '</td>' +
+                        '<td style="text-align:center;"><button type="button" class="btn btn-sm btn-outline-danger" onclick="satirSil(this,' + listeSayac + ')" style="padding:2px 7px;font-size:11px;">✕</button></td>';
+                    tbody.appendChild(satir);
+
+                    var gizliAlan = document.getElementById('gizliGirdilerMekani');
+                    var inputGroup = document.createElement('div');
+                    inputGroup.setAttribute('data-grup-id', listeSayac);
+                    inputGroup.innerHTML =
+                        '<input type="hidden" name="items[' + listeSayac + '].StokId" value="' + stokId + '" />' +
+                        '<input type="hidden" name="items[' + listeSayac + '].Miktar" value="' + miktar + '" />' +
+                        '<input type="hidden" name="items[' + listeSayac + '].CikisTuru" value="' + tur + '" />';
+                    gizliAlan.appendChild(inputGroup);
+
+                    listeSayac++;
+                    document.getElementById('genelCikisKaydetBtn').disabled = false;
+
+                    var genelPersonelDiv = document.getElementById('genelPersonelDiv');
+                    if (genelPersonelDiv) {
+                        var tumSatirlar = tbody.querySelectorAll('tr[data-satir-id]');
+                        var demirbas = Array.from(tumSatirlar).some(function(r){ return r.querySelector('.badge.bg-danger'); });
+                        genelPersonelDiv.style.display = demirbas ? 'block' : 'none';
+                    }
+
+                    sifirlaSecimAlani();
+                });
+            }
+
+        })();
+
+        function satirSil(btn, satirId) {
+            var satir = document.querySelector('tr[data-satir-id="' + satirId + '"]');
+            if (satir) satir.remove();
+            var grup = document.querySelector('[data-grup-id="' + satirId + '"]');
+            if (grup) grup.remove();
+
+            var tbody = document.querySelector('#topluCikisTablosu tbody');
+            var kalanSatirlar = tbody.querySelectorAll('tr[data-satir-id]');
+            if (kalanSatirlar.length === 0) {
+                document.getElementById('bosListeSatiri').style.display = '';
+                document.getElementById('genelCikisKaydetBtn').disabled = true;
+                var gpd = document.getElementById('genelPersonelDiv');
+                if (gpd) gpd.style.display = 'none';
+            } else {
+                var gpd = document.getElementById('genelPersonelDiv');
+                if (gpd) {
+                    var demirbas = Array.from(kalanSatirlar).some(function(r){ return r.querySelector('.badge.bg-danger'); });
+                    gpd.style.display = demirbas ? 'block' : 'none';
+                }
+            }
+        }
+            
+    document.addEventListener('change', function (e) {
+        if (e.target && e.target.name === 'rafTanimId') {
+            const modal = e.target.closest('.modal-content');
+            const rafNoInput = modal.querySelector('input[name="rafNo"]');
+            const secilenMetin = e.target.options[e.target.selectedIndex].text.trim().toUpperCase();
+
+            if (e.target.value !== "" && secilenMetin !== "") {
+                const basHarf = secilenMetin.charAt(0);
+                rafNoInput.value = basHarf + "-"; 
+                rafNoInput.focus();
+            } else {
+                rafNoInput.value = "";
+            }
+        }
+    });
+
+    
+    document.addEventListener('input', function (e) {
+        if (e.target && e.target.name === 'rafNo') {
+            const modal = e.target.closest('.modal-content');
+            const rafSelect = modal.querySelector('select[name="rafTanimId"]');
+
+            if (rafSelect && rafSelect.value !== "") {
+                const secilenMetin = rafSelect.options[rafSelect.selectedIndex].text.trim().toUpperCase();
+                const basHarf = secilenMetin.charAt(0);
+                const prefix = basHarf + "-";
+
+                
+                if (!e.target.value.startsWith(prefix)) {
+                   
+                    e.target.value = prefix;
+                }
+            }
+        }
+    });
+        document.addEventListener('change', function (e) {
+        if (e.target && e.target.name === 'rafTanimId') {
+            const modal = e.target.closest('.modal-content');
+            const secilenMetin = e.target.options[e.target.selectedIndex].text.toUpperCase();
+            const hesapAlani = modal.querySelector('#kimyasalHesaplamaAlani');
+            const miktarInput = modal.querySelector('input[name="miktar"]');
+            const bidonInput = modal.querySelector('#bidonAdetInput');
+
+            
+            if (secilenMetin.includes("KİMYASAL")) {
+                hesapAlani.style.display = 'block';
+                miktarInput.readOnly = true; 
+                miktarInput.style.backgroundColor = "#f8f9fa";
+            } else {
+                hesapAlani.style.display = 'none';
+                miktarInput.readOnly = false;
+                miktarInput.style.backgroundColor = "#fff";
+                bidonInput.value = "";
+            }
+        }
+    });
+
+    
+    document.addEventListener('input', function (e) {
+        if (e.target && e.target.id === 'bidonAdetInput') {
+            const modal = e.target.closest('.modal-content');
+            const miktarInput = modal.querySelector('input[name="miktar"]');
+
+            let bidonSayisi = parseFloat(e.target.value) || 0;
+            miktarInput.value = (bidonSayisi * 25); 
+        }
+    });
+        
+                </script>
+

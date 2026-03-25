@@ -1,0 +1,127 @@
+@model List<ArıtmaEnvanter.Models.Entities.Malzeme>
+@{
+    ViewData["Title"] = "Ürün Kataloğu / Tanımları";
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-box-seam-fill me-2" style="color:#00a8e8;"></i>Ürün Tanımları</h2>
+        <p>Depo ve raflarda kullanılacak standart ürün tiplerini tanımlayın</p>
+    </div>
+    <div class="header-actions">
+        <a asp-action="Olustur" class="btn-cyan">
+            <i class="bi bi-plus-lg"></i> Yeni Ürün Tanımı
+        </a>
+    </div>
+</div>
+
+@if (TempData["Basarili"] != null)
+{
+    <div class="alert-ok"><i class="bi bi-check-circle-fill"></i> @TempData["Basarili"]</div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert-err"><i class="bi bi-exclamation-circle-fill"></i> @TempData["Hata"]</div>
+}
+
+<div class="filter-bar">
+    <form method="get" class="d-flex gap-2 flex-wrap align-items-center w-100">
+        <div style="position:relative;flex:1;min-width:200px;">
+            <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px;"></i>
+            <input type="text" name="arama" value="@ViewBag.Arama"
+                   class="form-control" style="padding-left:34px;"
+                   placeholder="Ürün adı veya kod numarası ile ara...">
+        </div>
+        <button type="submit" class="btn-outline-filter">
+            <i class="bi bi-funnel"></i> Filtrele
+        </button>
+        <a href="@Url.Action("Index", "Malzeme")" class="btn-outline-clear">
+            <i class="bi bi-x"></i> Temizle
+        </a>
+    </form>
+</div>
+
+<div class="data-card">
+    <div class="data-card-head">
+        <h6>
+            <i class="bi bi-table"></i> Ürün Listesi
+            <span class="record-count">@Model.Count ürün</span>
+        </h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Ürün Adı</th>
+                    <th>Alternatif Ad / Kod</th>
+                    <th>Varsayılan Birim</th>
+                    <th>Bağlı Şablon (Dinamik Form)</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var m in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-dark">@m.Ad</div>
+                                <div class="text-primary small fw-semibold">
+                                    @if (m.Raf != null)
+                                    {
+                                        <i class="bi bi-layers me-1"></i> @m.Raf
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted"><i class="bi bi-layers me-1"></i> Raf Atanmamış</span>
+                                    }
+                                </div>
+                            </td>
+                            <td>@m.AlternatifAd</td>
+
+                            <td>
+                                <span class="badge bg-light text-dark border">@m.Birim</span>
+                            </td>
+                            <td>
+                                @if (m.FormSablon != null)
+                                {
+                                    <span class="badge" style="background-color: #673ab7;">
+                                        <i class="bi bi-ui-checks me-1"></i> @m.FormSablon.Baslik
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">Şablon Yok</span>
+                                }
+                            </td>
+                            <td>
+                                <div style="display:flex;gap:6px;">
+                                    <a asp-action="Duzenle" asp-route-id="@m.Id" class="btn-edit" title="Düzenle">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form asp-action="Sil" asp-route-id="@m.Id" method="post" class="d-inline"
+                                          onsubmit="return confirm('Bu ürün tanımını silmek istediğinize emin misiniz? Bu işlem silinen tanıma bağlı stoklardaki referansı temizler.')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-del" title="Sil">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox fs-1 d-block mb-3 opacity-25"></i>
+                            Henüz ürün tanımı eklenmemiş.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

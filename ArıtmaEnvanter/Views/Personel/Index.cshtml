@@ -1,0 +1,345 @@
+@model List<ArıtmaEnvanter.Models.Entities.Personel>
+@{
+    ViewData["Title"] = "Personel";
+}
+
+<style>
+    .btn-del-bulk {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1.5px solid #fecaca;
+        padding: 9px 18px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: 'Nunito', sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .btn-del-bulk:hover {
+        background: #fee2e2;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(220, 38, 38, 0.15);
+    }
+
+    .col-bulk {
+        display: none !important;
+    }
+
+    .bulk-mode .col-bulk {
+        display: table-cell !important;
+    }
+</style>
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-people-fill me-2" style="color:#00a8e8;"></i>Personel</h2>
+        <p>Kurum personelini yönetin ve zimmet takibi yapın <small style="opacity:0.3;font-size:10px;">v4</small></p>
+    </div>
+    <div class="header-actions">
+        <button id="btnBulkDelete" type="button" class="btn-del-bulk" style="display:none;"
+            onclick="topluPersonelSilmeIslemi()">
+            <i class="bi bi-trash3-fill"></i> Seçilenleri Sil (<span id="selectedCount">0</span>)
+        </button>
+        <button id="btnToggleBulk" type="button" class="btn-edit" onclick="toggleBulkMode()">
+            <i class="bi bi-check2-square"></i> Toplu İşlemler
+        </button>
+        <button type="button" class="btn-edit" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="bi bi-file-earmark-arrow-up"></i> Toplu İçe Aktar
+        </button>
+        <a asp-action="ExcelExport" class="btn-edit">
+            <i class="bi bi-file-earmark-excel"></i> Excel'e Aktar
+        </a>
+        <a asp-action="Olustur" class="btn-cyan">
+            <i class="bi bi-plus-lg"></i> Yeni Personel Ekle
+        </a>
+    </div>
+</div>
+
+
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-file-earmark-spreadsheet me-2"></i>Personel Aktarımı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <form asp-action="ExcelImport" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="alert alert-info" style="font-size:13px;">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Lütfen verileri sistemdeki birim isimleriyle birebir aynı olacak şekilde hazırlayın.
+                        <a asp-action="ExcelSablon" class="fw-bold text-decoration-none d-block mt-1">
+                            <i class="bi bi-download"></i> Örnek Şablonu İndir
+                        </a>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-600">Excel Dosyası Seçin</label>
+                        <input type="file" name="excelFile" class="form-control" accept=".xlsx,.xls" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn-cyan">Yüklemeyi Başlat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Basarili"] != null)
+{
+    <div class="alert-ok"><i class="bi bi-check-circle-fill"></i> @TempData["Basarili"]</div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert-err"><i class="bi bi-exclamation-circle-fill"></i> @TempData["Hata"]</div>
+}
+
+<div class="filter-bar">
+    <form method="get" class="d-flex gap-2 flex-wrap align-items-center w-100">
+        <div style="position:relative;flex:1;min-width:200px;">
+            <i class="bi bi-search"
+                style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px;"></i>
+            <input type="text" name="arama" value="@ViewBag.Arama" class="form-control" style="padding-left:34px;"
+                placeholder="Ad, ünvan veya email ile ara...">
+        </div>
+        <select name="birimId" class="form-select" style="width:180px;">
+            <option value="">— Tüm Birimler —</option>
+            @foreach (var b in ViewBag.Birimler as List<ArıtmaEnvanter.Models.Entities.Birim> ?? new())
+            {
+                @if (ViewBag.BirimId == b.Id)
+                {
+                    <option value="@b.Id" selected>@b.Ad</option>
+                }
+                else
+                {
+                    <option value="@b.Id">@b.Ad</option>
+                }
+            }
+        </select>
+        <button type="submit" class="btn-outline-filter"><i class="bi bi-funnel"></i> Filtrele</button>
+        <a href="@Url.Action("Index", "Personel")" class="btn-outline-clear"><i class="bi bi-x"></i> Temizle</a>
+    </form>
+</div>
+
+@Html.AntiForgeryToken()
+
+<div class="data-card">
+    <div class="data-card-head">
+        <h6><i class="bi bi-table"></i> Personel Listesi <span class="record-count">@Model.Count kayıt</span></h6>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table" id="personelTable">
+                <thead>
+                    <tr>
+                        <th style="width:40px;" class="col-bulk">
+                            <input type="checkbox" id="selectAll" class="form-check-input" style="cursor:pointer;" />
+                        </th>
+                        <th>Ad Soyad</th>
+                        <th>Ünvan</th>
+                        <th>Birim</th>
+                        <th>Telefon</th>
+                        <th>Email</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int i = 1;
+                    }
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td class="col-bulk">
+                                <input type="checkbox" class="personel-checkbox form-check-input" data-id="@p.Id"
+                                    style="cursor:pointer;" />
+                            </td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <div
+                                        style="width:34px;height:34px;background:#eff6ff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#003d7a;font-size:13px;">
+                                        @p.AdSoyad.Substring(0, 1).ToUpper()
+                                    </div>
+                                    <a asp-action="Detay" asp-route-id="@p.Id"
+                                        style="font-weight:700;color:#003d7a;text-decoration:none;">
+                                        @p.AdSoyad
+                                    </a>
+                                </div>
+                            </td>
+                            <td style="color:#64748b;">@(p.Unvan ?? "—")</td>
+                            <td>
+                                <span
+                                    style="background:#f1f5f9;color:#475569;padding:3px 10px;border-radius:6px;font-size:12px;font-weight:600;">
+                                    @p.Birim?.Ad
+                                </span>
+                            </td>
+                            <td style="color:#64748b;font-size:13px;">@(p.Telefon ?? "—")</td>
+                            <td style="color:#64748b;font-size:13px;">@(p.Email ?? "—")</td>
+                            <td>
+                                <div style="display:flex;gap:6px;">
+                                    <a asp-action="Detay" asp-route-id="@p.Id" class="btn-edit">
+                                        <i class="bi bi-eye"></i> Detay
+                                    </a>
+                                    <a asp-action="Duzenle" asp-route-id="@p.Id" class="btn-edit">
+                                        <i class="bi bi-pencil"></i> Düzenle
+                                    </a>
+                                    <form asp-action="Sil" asp-route-id="@p.Id" method="post" class="d-inline"
+                                        onsubmit="return confirm('Bu personeli silmek istediğinize emin misiniz?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-del">
+                                            <i class="bi bi-trash"></i> Sil
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <i class="bi bi-people" style="font-size:44px;opacity:0.3;display:block;margin-bottom:12px;"></i>
+            <p>Henüz personel eklenmemiş.</p>
+            <a asp-action="Olustur" class="btn-cyan" style="margin-top:14px;display:inline-flex;">
+                <i class="bi bi-plus-lg"></i> İlk Personeli Ekle
+            </a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+      
+        let personelCheckboxes = [];
+
+        function toggleBulkMode() {
+            const table = document.getElementById('personelTable');
+            const btnToggle = document.getElementById('btnToggleBulk');
+            const btnBulkDelete = document.getElementById('btnBulkDelete');
+
+            if (!table || !btnToggle) return;
+
+            if (table.classList.contains('bulk-mode')) {
+                table.classList.remove('bulk-mode');
+                btnToggle.innerHTML = '<i class="bi bi-check2-square"></i> Toplu İşlemler';
+                btnToggle.style.background = '';
+                btnToggle.className = 'btn-edit';
+
+                
+                const selectAll = document.getElementById('selectAll');
+                if (selectAll) selectAll.checked = false;
+                document.querySelectorAll('.personel-checkbox').forEach(cb => cb.checked = false);
+                if (btnBulkDelete) btnBulkDelete.style.display = 'none';
+            } else {
+                table.classList.add('bulk-mode');
+                btnToggle.innerHTML = '<i class="bi bi-x-lg"></i> Vazgeç';
+                btnToggle.style.background = '#f1f5f9';
+                btnToggle.style.color = '#475569';
+                btnToggle.style.borderColor = '#cbd5e1';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const selectAll = document.getElementById('selectAll');
+            const btnBulkDelete = document.getElementById('btnBulkDelete');
+            const selectedCount = document.getElementById('selectedCount');
+
+            
+            const updateCheckboxes = () => {
+                personelCheckboxes = Array.from(document.querySelectorAll('.personel-checkbox'));
+            };
+            updateCheckboxes();
+
+            if (selectAll) {
+                selectAll.addEventListener('change', function () {
+                    personelCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+                    updateBulkDeleteButton();
+                });
+            }
+
+            document.getElementById('personelTable')?.addEventListener('change', function (e) {
+                if (e.target.classList.contains('personel-checkbox')) {
+                    updateBulkDeleteButton();
+                }
+            });
+
+            function updateBulkDeleteButton() {
+                const checkedCount = document.querySelectorAll('.personel-checkbox:checked').length;
+                if (selectedCount) selectedCount.textContent = checkedCount;
+
+                if (btnBulkDelete) {
+                    btnBulkDelete.style.display = checkedCount > 0 ? 'inline-flex' : 'none';
+                }
+
+                if (selectAll) {
+                    const allChecked = checkedCount === personelCheckboxes.length && personelCheckboxes.length > 0;
+                    selectAll.checked = allChecked;
+                }
+            }
+        });
+
+        function topluPersonelSilmeIslemi() {
+            
+            const allCheckedNodes = document.querySelectorAll('.personel-checkbox:checked');
+            const checkedArray = Array.from(allCheckedNodes);
+
+            console.log('Checked Nodes Found:', checkedArray.length);
+
+            const ids = checkedArray.map(cb => {
+                return cb.getAttribute('data-id');
+            }).filter(id => id !== null).map(id => parseInt(id));
+
+            if (ids.length === 0) {
+               
+                alert('SEÇİM HATASI: İşaretlediğiniz personeller sistem tarafından okunamadı (Adet: ' + checkedArray.length + '). \n\nLütfen Ctrl+F5 yaparak sayfayı tamamen yenileyin.');
+                return;
+            }
+
+            if (confirm(ids.length + ' personeli silmek istediğinize emin misiniz?')) {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                if (!token) {
+                    alert('Güvenlik hatası: CSRF token bulunamadı.');
+                    return;
+                }
+
+                fetch('@Url.Action("TopluSil", "Personel")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-XSRF-TOKEN': token
+                    },
+                    body: JSON.stringify(ids)
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Sunucu hatası: ' + response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Hata:', err);
+                        alert('Bir hata oluştu: ' + err.message);
+                    });
+            }
+        }
+    </script>
+}

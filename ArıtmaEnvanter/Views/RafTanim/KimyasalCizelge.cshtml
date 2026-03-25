@@ -1,0 +1,140 @@
+@model ArıtmaEnvanter.Models.ViewModels.PoliCizelgeViewModel
+@{
+    ViewData["Title"] = "Poli Tüketim Çizelgesi";
+    string[] Aylar = { "OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN", "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK" };
+}
+
+<style>
+    .excel-container {
+        width: 100%;
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .excel-header {
+        background-color: #1e3a5f;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Geri Dön</a>
+    <h3 class="mb-0 text-primary"><i class="bi bi-droplet-fill"></i> POLİ TÜKETİM MATRİSİ (@Model.Yil)</h3>
+    <form method="get" class="d-flex gap-2">
+        <input type="number" name="yil" value="@Model.Yil" class="form-control" style="width:100px;" />
+        <button type="submit" class="btn btn-primary">Yılı Değiştir</button>
+    </form>
+</div>
+
+<div class="excel-container">
+    <div class="excel-header" style="display:flex; justify-content:space-between; align-items:center; padding:10px 20px;">
+        <img src="~/images/image.png" alt="Logo 1" style="height:60px; object-fit:contain;" />
+        <div style="flex:1; text-align:center;">
+            <div style="font-size:24px; font-weight:bold; letter-spacing:1px;">İLERİ BİYOLOJİK ATIKSU ARITMA TESİSİ</div>
+            <div style="font-size:16px; font-weight:normal; letter-spacing:0.5px;">POLİ TÜKETİM MİKTARLARI</div>
+        </div>
+        <img src="~/images/image copy.png" alt="Logo 2" style="height:60px; object-fit:contain;" />
+    </div>
+
+    <div class="card mb-4 mt-3" style="border:4px solid #1e3a5f; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <div class="card-header text-white" style="background-color: #1e3a5f; padding: 12px 20px;">
+            <h5 class="mb-0" style="font-size:15px; font-weight:bold; letter-spacing:0.5px;"><i class="bi bi-box-arrow-in-down me-2" style="font-size:18px;"></i>KİMYASAL ÜRÜN (POLİMER) GİRİŞİ</h5>
+        </div>
+        <div class="card-body" style="padding: 20px;">
+            
+            
+            <form id="girisForm" class="row g-3 align-items-end mb-4 bg-light p-3 rounded border">
+                <div class="col-md-2">
+                    <label style="font-size:12px; font-weight:700; color:#1e3a5f; margin-bottom:5px;">Tarih <span class="text-danger">*</span></label>
+                    <input type="date" id="gTarih" class="form-control" required />
+                </div>
+                <div class="col-md-2">
+                    <label style="font-size:12px; font-weight:700; color:#1e3a5f; margin-bottom:5px;">Adet (Bidon) <span class="text-danger">*</span></label>
+                    <input type="number" id="gAdet" class="form-control" required oninput="document.getElementById('gKg').value = this.value * 25" style="border:1px solid #1e3a5f;" />
+                </div>
+                <div class="col-md-2">
+                    <label style="font-size:12px; font-weight:700; color:#1e3a5f; margin-bottom:5px;">KG / Litre <span class="text-danger">*</span></label>
+                    <input type="number" id="gKg" class="form-control bg-white" required readonly style="border:1px solid #1e3a5f;" />
+                </div>
+                <div class="col-md-4">
+                    <label style="font-size:12px; font-weight:700; color:#1e3a5f; margin-bottom:5px;">Firma</label>
+                    <input type="text" id="gAciklama" class="form-control" placeholder="Örn: Abacı Kimya " />
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-success w-100 fw-bold" onclick="addGiris()" style="padding:0.5rem 1rem;"><i class="bi bi-plus-lg me-1"></i> Sisteme Ekle</button>
+                </div>
+            </form>
+
+            <h6 style="font-size:13px; font-weight:bold; color:#1e3a5f; margin-bottom:10px; border-bottom:2px solid #eee; padding-bottom:8px;"><i class="bi bi-clock-history me-2"></i>@Model.Yil YILI TESLİMAT KAYITLARI GECMİŞİ</h6>
+            <div style="max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; border-radius:4px;">
+                <table class="table table-hover table-striped mb-0" style="font-size:12px; text-align:center;">
+                    <thead class="table-dark sticky-top" style="background-color:#1e3a5f;">
+                        <tr>
+                            <th style="width:15%; font-weight:600;">Teslimat Tarihi</th>
+                            <th style="width:15%; font-weight:600;">Adet (Bidon)</th>
+                            <th style="width:15%; font-weight:600;">KG / Litre</th>
+                            <th style="width:55%; font-weight:600; text-align:left; padding-left:20px;">Açıklama</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var g in Model.Girisler)
+                        {
+                            <tr>
+                                <td class="align-middle fw-bold">@g.Tarih.ToString("dd.MM.yyyy")</td>
+                                <td class="align-middle"><span class="badge rounded-pill" style="background-color:#e1f0fa; color:#0c4a6e; font-size:12px; padding:6px 12px; border:1px solid #bae6fd;">@g.Adet.ToString("0.##") Adet</span></td>
+                                <td class="align-middle"><span class="badge rounded-pill" style="background-color:#dcfce7; color:#166534; font-size:12px; padding:6px 12px; border:1px solid #bbf7d0;">@g.Kg.ToString("0.##") KG</span></td>
+                                <td class="text-start text-muted align-middle" style="padding-left:20px;">@(string.IsNullOrEmpty(g.Aciklama) ? "—" : g.Aciklama)</td>
+                            </tr>
+                        }
+                        @if (!Model.Girisler.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2 text-black-50"></i>
+                                    Bu yıla ait herhangi bir teslimat girişi bulunmamaktadır.<br>
+                                    <small>Sisteme poli girişlerini yukarıdaki formdan yapabilirsiniz.</small>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+
+
+</div>
+
+@section Scripts {
+    <script>
+
+
+        function addGiris() {
+            let gTarih = document.getElementById('gTarih').value;
+            let gAdet = parseFloat(document.getElementById('gAdet').value.replace(',','.')) || 0;
+            let gKg = parseFloat(document.getElementById('gKg').value.replace(',','.')) || 0;
+            let gAciklama = document.getElementById('gAciklama').value;
+
+            if(!gTarih) { alert("Lütfen tarih seçin!"); return; }
+
+            fetch('/RafTanim/PoliGirisEkle', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `tarih=${gTarih}&adet=${gAdet}&kg=${gKg}&aciklama=${encodeURIComponent(gAciklama)}`
+            }).then(r => r.json()).then(res => {
+                if(res.success) location.reload(); else alert("Hata oluştu.");
+            });
+        }
+    </script>
+}

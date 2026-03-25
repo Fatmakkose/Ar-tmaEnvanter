@@ -1,0 +1,105 @@
+﻿@model List<(ArıtmaEnvanter.Models.Entities.ApplicationUser, IList<string>, string?, string?)>
+@{
+    ViewData["Title"] = "Kullanıcı Yönetimi";
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-people-fill me-2" style="color:#00a8e8;"></i>Kullanıcı Yönetimi</h2>
+        <p class="text-muted mb-0">Sisteme kayıtlı kullanıcıları yönetin</p>
+    </div>
+    <div class="header-actions">
+        <a asp-controller="Account" asp-action="Kayit" class="btn-cyan">
+            <i class="bi bi-person-plus"></i> Yeni Kullanıcı Ekle
+        </a>
+    </div>
+</div>
+
+@if (TempData["Basarili"] != null)
+{
+    <div class="alert-ok"><i class="bi bi-check-circle-fill"></i> @TempData["Basarili"]</div>
+}
+
+<div class="row g-3">
+    @foreach (var (kullanici, roller, districtClaim, warehouseClaim) in Model)
+    {
+        var rolColor = roller.Contains("Admin") ? "#003d7a" : roller.Contains("IlceSorumlusu") ? "#00a8e8" : "#64748b";
+        var rolBg = roller.Contains("Admin") ? "#eff6ff" : roller.Contains("IlceSorumlusu") ? "#e8f6fd" : "#f1f5f9";
+
+        <div class="col-md-6 col-lg-4">
+            <div style="background:#fff; border-radius:16px; border:1px solid #e2e8f0; padding:20px; height:100%; position:relative;">
+
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                    <div style="width:44px; height:44px; background:@rolBg; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; color:@rolColor; font-size:18px; flex-shrink:0;">
+                        @kullanici.AdSoyad?.Substring(0, 1).ToUpper()
+                    </div>
+                    <div style="min-width:0;">
+                        <div style="font-weight:700; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            @kullanici.AdSoyad
+                        </div>
+                        <div style="color:#94a3b8; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            @kullanici.Email
+                        </div>
+                    </div>
+                </div>
+
+                <form asp-action="RolDegistir" method="post" class="mb-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="userId" value="@kullanici.Id" />
+                    <label style="font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:6px;">ROL</label>
+                    <div class="d-flex gap-2 align-items-start">
+                        <div style="flex:1; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px;">
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="yeniRoller" value="Admin" id="admin_@kullanici.Id" @(roller.Contains("Admin") ? "checked" : "") />
+                                <label class="form-check-label" style="font-size:13px;" for="admin_@kullanici.Id">Admin</label>
+                            </div>
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox" name="yeniRoller" value="IlceSorumlusu" id="ilce_@kullanici.Id" @(roller.Contains("IlceSorumlusu") ? "checked" : "") />
+                                <label class="form-check-label" style="font-size:13px;" for="ilce_@kullanici.Id">İlçe Sorumlusu</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="yeniRoller" value="Kullanici" id="kullanici_@kullanici.Id" @(roller.Contains("Kullanici") ? "checked" : "") />
+                                <label class="form-check-label" style="font-size:13px;" for="kullanici_@kullanici.Id">Kullanıcı</label>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Kaydet">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <form asp-action="DepoAta" method="post" class="mb-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="userId" value="@kullanici.Id" />
+                    <label style="font-size:11px; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px;">GÖREVLİ DEPO</label>
+                    <div class="d-flex gap-2">
+                        <select name="depoId" class="form-select form-select-sm" style="font-size:13px;">
+                            <option value="">Depo Yok</option>
+                            @foreach (var depo in ViewBag.Depolar)
+                            {
+                                <option value="@depo.Id" selected="@(warehouseClaim == depo.Id.ToString() ? "selected" : null)">@depo.Ad</option>
+                            }
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Kaydet">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                    </div>
+                </form>
+
+                @if (kullanici.Email != User.Identity!.Name)
+                {
+                    <div style="position:absolute; top:16px; right:16px;">
+                        <form asp-action="KullaniciSil" method="post" onsubmit="return confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="userId" value="@kullanici.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger" style="padding:2px 6px; font-size:12px;" title="Sil">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                }
+
+            </div>
+        </div>
+    }
+</div>
