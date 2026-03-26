@@ -22,10 +22,14 @@ namespace ArıtmaEnvanter.Models.Entities
 
         public string? UrunAdi { get; set; }
         public string? Birim { get; set; }
-        
+        public int? BidonSayisi { get; set; }
+        public decimal? BidonKg { get; set; }
+
         [Display(Name = "İşlem Yapan Kişi")]
         public string? IslemYapanKisi { get; set; }
 
         public DateTime GuncellemeTarihi { get; set; } = DateTime.UtcNow;
+
+      
     }
 }

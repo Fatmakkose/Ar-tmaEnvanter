@@ -60,13 +60,23 @@ namespace ArıtmaEnvanter.Controllers
                 int yil = DateTime.Now.Year;
                 if (int.TryParse(Request.Query["yil"], out int pYil)) yil = pYil;
 
+                int? ay = null;
+                if (int.TryParse(Request.Query["ay"], out int pAy) && pAy >= 1 && pAy <= 12) ay = pAy;
+
+                var girisQuery = _db.KimyasalGirisler.Where(g => g.Tarih.Year == yil);
+                if (ay.HasValue) girisQuery = girisQuery.Where(g => g.Tarih.Month == ay.Value);
+
+                var tuketimQuery = _db.KimyasalTuketimler.Where(t => t.Yil == yil);
+                if (ay.HasValue) tuketimQuery = tuketimQuery.Where(t => t.Ay == ay.Value);
+
                 var viewModel = new PoliCizelgeViewModel
                 {
                     RafId = raf.Id,
                     RafAd = raf.Ad,
                     Yil = yil,
-                    Girisler = await _db.KimyasalGirisler.Where(g => g.Tarih.Year == yil).OrderBy(g => g.Tarih).ToListAsync(),
-                    Tuketimler = await _db.KimyasalTuketimler.Where(t => t.Yil == yil).ToListAsync(),
+                    Ay = ay,
+                    Girisler = await girisQuery.OrderBy(g => g.Tarih).ToListAsync(),
+                    Tuketimler = await tuketimQuery.ToListAsync(),
                     Devir = await _db.KimyasalDevirler.FirstOrDefaultAsync(d => d.Yil == yil)
                 };
                 return View("KimyasalCizelge", viewModel);
@@ -81,13 +91,14 @@ namespace ArıtmaEnvanter.Controllers
                 .Where(h => h.RafTanimId == id)
                 .ToListAsync();
 
-            
-            
-            var rafStokListesi = stoklar.Select(s => {
-               
+
+
+            var rafStokListesi = stoklar.Select(s =>
+            {
+
                 decimal cikan = hareketler.Where(h => h.MalzemeId == s.MalzemeId && h.RafNo == s.RafNo && h.HedefDepoId == null).Sum(h => h.Miktar);
-                
-               
+
+
                 decimal giren = s.Miktar + cikan;
 
                 return new RafStokViewModel
@@ -113,7 +124,7 @@ namespace ArıtmaEnvanter.Controllers
             var stok = await _db.DepoStoklar.FindAsync(stokId);
             if (stok != null)
             {
-                
+
                 _db.DepoStoklar.Remove(stok);
                 await _db.SaveChangesAsync();
                 TempData["Basarili"] = "Seçilen ürün stoklardan silindi.";
@@ -137,7 +148,7 @@ namespace ArıtmaEnvanter.Controllers
         {
             if (id != model.Id) return NotFound();
 
-            
+
             if (!ModelState.IsValid)
             {
                 ViewBag.Personeller = await _db.Personeller.OrderBy(p => p.AdSoyad).ToListAsync();
@@ -147,15 +158,15 @@ namespace ArıtmaEnvanter.Controllers
             var raf = await _db.RafTanimlar.FindAsync(id);
             if (raf == null) return NotFound();
 
-           
+
             raf.Ad = model.Ad;
             raf.SorumluPersonel = model.SorumluPersonel;
             raf.Iletisim = model.Iletisim;
             raf.Aciklama = model.Aciklama;
 
-            
+
             raf.AktifMi = Request.Form["AktifMi"].Contains("true");
-           
+
 
             await _db.SaveChangesAsync();
             TempData["Basarili"] = $"{raf.Ad} bilgisi güncellendi.";
@@ -176,7 +187,7 @@ namespace ArıtmaEnvanter.Controllers
         [HttpPost]
         public async Task<IActionResult> PoliTuketimKaydet(int yil, int ay, int gun, decimal adet, decimal kg)
         {
-            
+
             var kayit = await _db.KimyasalTuketimler.FirstOrDefaultAsync(t => t.Yil == yil && t.Ay == ay && t.Gun == gun);
             if (kayit != null)
             {

@@ -33,10 +33,10 @@ namespace ArıtmaEnvanter.Controllers
             ViewBag.Arama = arama;
 
             var stoklarQuery = _db.DepoStoklar
-                .Include(s => s.Malzeme)
-                .Include(s => s.Depo)
-                .Include(s => s.RafTanim)
-                .AsQueryable();
+              .Include(s => s.Malzeme)
+              .Include(s => s.Depo)
+              .Include(s => s.RafTanim)
+              .AsQueryable();
 
             if (depoId.HasValue)
             {
@@ -91,14 +91,14 @@ namespace ArıtmaEnvanter.Controllers
             ViewBag.Raflar = await _db.RafTanimlar.OrderBy(r => r.Ad).ToListAsync();
             ViewBag.Personeller = await _db.Personeller.OrderBy(p => p.AdSoyad).ToListAsync();
             ViewBag.Firmalar = await _db.Firmalar.OrderBy(f => f.FirmaAdi).ToListAsync();
-            ViewBag.StoktakiMalzemeler = await _db.DepoStoklar .Include(s => s.Malzeme).Where(s => s.Miktar > 0).Select(s => s.Malzeme).Distinct().OrderBy(m => m.Ad).ToListAsync();
-        
+            ViewBag.StoktakiMalzemeler = await _db.DepoStoklar.Include(s => s.Malzeme).Where(s => s.Miktar > 0).Select(s => s.Malzeme).Distinct().OrderBy(m => m.Ad).ToListAsync();
+
             return View(stoklar);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Giris(int malzemeId, int? depoId, int? rafTanimId, string? rafNo, decimal miktar, string? aciklama, IFormCollection form, int? firmaId)
+        public async Task<IActionResult> Giris(int malzemeId, int? depoId, int? rafTanimId, string? rafNo, decimal miktar, string? aciklama, string birim, IFormCollection form, int? firmaId, int? bidonSayisi)
         {
             if (malzemeId <= 0)
             {
@@ -124,6 +124,7 @@ namespace ArıtmaEnvanter.Controllers
                 TempData["Hata"] = "Ürün bulunamadı.";
                 return RedirectToAction(nameof(Index));
             }
+
             if (miktar <= 0)
             {
                 TempData["Hata"] = "Giriş miktarı 0'dan büyük olmalıdır.";
@@ -148,19 +149,21 @@ namespace ArıtmaEnvanter.Controllers
                 }
             }
 
-            string kayitUrunAdi = malzeme.Ad + ekOzellikler;
+            string temizUrunAdi = (malzeme.Ad + ekOzellikler).Trim();
+            string kullaniciAdSoyad = await GetKullaniciAdSoyad();
 
-            string temizUrunAdi = kayitUrunAdi.Trim();
 
             var stok = await _db.DepoStoklar
                 .FirstOrDefaultAsync(s => s.MalzemeId == malzemeId
-                                       && s.DepoId == gercekDepoId
-                                       && s.RafTanimId == rafTanimId
-                                       && (s.RafNo == null ? rafNo == null : s.RafNo.Trim() == (rafNo ?? "").Trim())
-                                       && s.UrunAdi.Trim() == temizUrunAdi);
+                                        && s.DepoId == gercekDepoId
+                                        && s.RafTanimId == rafTanimId
+                                        && (s.RafNo == null ? rafNo == null : s.RafNo.Trim() == (rafNo ?? "").Trim())
+                                        && s.UrunAdi.Trim() == temizUrunAdi
+                                        && s.Birim == birim);
 
             if (stok == null)
             {
+
                 stok = new DepoStok
                 {
                     MalzemeId = malzemeId,
@@ -169,9 +172,11 @@ namespace ArıtmaEnvanter.Controllers
                     RafNo = (rafNo ?? "").Trim(),
                     Miktar = miktar,
                     UrunAdi = temizUrunAdi,
-                    Birim = malzeme.Birim?.Ad ?? "Adet",
-                    IslemYapanKisi = await GetKullaniciAdSoyad(),
-                    GuncellemeTarihi = DateTime.UtcNow
+                    Birim = birim,
+                    IslemYapanKisi = kullaniciAdSoyad,
+                    GuncellemeTarihi = DateTime.UtcNow,
+                    BidonSayisi = bidonSayisi ?? 0,
+                    BidonKg = (bidonSayisi ?? 0) * 25m
                 };
                 _db.DepoStoklar.Add(stok);
             }
@@ -179,8 +184,14 @@ namespace ArıtmaEnvanter.Controllers
             {
 
                 stok.Miktar += miktar;
-                stok.IslemYapanKisi = await GetKullaniciAdSoyad();
+                stok.IslemYapanKisi = kullaniciAdSoyad;
                 stok.GuncellemeTarihi = DateTime.UtcNow;
+
+                if (bidonSayisi.HasValue)
+                {
+                    stok.BidonSayisi = (stok.BidonSayisi ?? 0) + bidonSayisi.Value;
+                    stok.BidonKg = (stok.BidonSayisi ?? 0) * 25m;
+                }
                 _db.DepoStoklar.Update(stok);
             }
 
@@ -194,18 +205,40 @@ namespace ArıtmaEnvanter.Controllers
                 RafNo = rafNo,
                 Miktar = miktar,
                 Tarih = DateTime.UtcNow,
-                IslemYapanKisi = await GetKullaniciAdSoyad(),
+                IslemYapanKisi = kullaniciAdSoyad,
                 FirmaId = firmaId
             };
-
             _db.DepoHareketler.Add(hareket);
+
+           
+            if (rafTanimId.HasValue)
+            {
+                var raf = await _db.RafTanimlar.FindAsync(rafTanimId.Value);
+                if (raf != null && raf.Ad != null && raf.Ad.Trim().ToUpper() == "KİMYASAL")
+                {
+                    string firmaAdi = "";
+                    if (firmaId.HasValue)
+                    {
+                        var firma = await _db.Firmalar.FindAsync(firmaId.Value);
+                        firmaAdi = firma?.FirmaAdi ?? "";
+                    }
+
+                    var kimyasalGiris = new KimyasalGiris
+                    {
+                        Tarih = DateTime.UtcNow,
+                        Adet = bidonSayisi ?? 0,
+                        Kg = (bidonSayisi ?? 0) * 25m,
+                        Aciklama = firmaAdi
+                    };
+                    _db.KimyasalGirisler.Add(kimyasalGiris);
+                }
+            }
 
 
             if (malzeme.FormSablonId.HasValue)
             {
                 var formSablonId = malzeme.FormSablonId.Value;
                 var alanlar = await _db.FormAlanlar.Where(a => a.FormSablonId == formSablonId).ToListAsync();
-
                 var formKayit = new FormKayit
                 {
                     FormSablonId = formSablonId,
@@ -227,13 +260,12 @@ namespace ArıtmaEnvanter.Controllers
                         });
                     }
                 }
-
                 _db.FormKayitlar.Add(formKayit);
             }
 
             await _db.SaveChangesAsync();
 
-            TempData["Basarili"] = $"{malzeme.Ad} için {miktar} adet stok girişi yapıldı.";
+            TempData["Basarili"] = $"{malzeme.Ad} için {miktar} {birim} stok girişi yapıldı.";
             return RedirectToAction(nameof(Index), new { depoId });
         }
 
@@ -241,11 +273,11 @@ namespace ArıtmaEnvanter.Controllers
         public async Task<IActionResult> GetMalzemeFormAlanlari(int malzemeId)
         {
             var malzeme = await _db.Malzemeler
-                .Include(m => m.FormSablon)
-                    .ThenInclude(fs => fs.Alanlar)
-                .Include(m => m.Kategori)
-                .Include(m => m.Birim)
-                .FirstOrDefaultAsync(m => m.Id == malzemeId);
+              .Include(m => m.FormSablon)
+                .ThenInclude(fs => fs.Alanlar)
+              .Include(m => m.Kategori)
+              .Include(m => m.Birim)
+              .FirstOrDefaultAsync(m => m.Id == malzemeId);
 
             if (malzeme == null)
             {
@@ -283,19 +315,19 @@ namespace ArıtmaEnvanter.Controllers
         public async Task<IActionResult> GetMalzemeMevcutStoklar(int malzemeId)
         {
             var stoklar = await _db.DepoStoklar
-                .Include(s => s.RafTanim)
-                .Where(s => s.MalzemeId == malzemeId && s.Miktar > 0)
-                .OrderBy(s => (s.RafTanim != null ? s.RafTanim.Ad : "Genel Alan"))
-                .Select(s => new
-                {
-                    s.Id,
-                    UrunAdi = s.UrunAdi,
-                    RafAd = s.RafTanim != null ? s.RafTanim.Ad : "Genel Alan",
-                    RafNo = s.RafNo,
-                    s.Miktar,
-                    s.Birim
-                })
-                .ToListAsync();
+              .Include(s => s.RafTanim)
+              .Where(s => s.MalzemeId == malzemeId && s.Miktar > 0)
+              .OrderBy(s => (s.RafTanim != null ? s.RafTanim.Ad : "Genel Alan"))
+              .Select(s => new
+              {
+                  s.Id,
+                  UrunAdi = s.UrunAdi,
+                  RafAd = s.RafTanim != null ? s.RafTanim.Ad : "Genel Alan",
+                  RafNo = s.RafNo,
+                  s.Miktar,
+                  s.Birim
+              })
+              .ToListAsync();
 
             return Json(new { success = true, stoklar });
         }
@@ -323,8 +355,8 @@ namespace ArıtmaEnvanter.Controllers
             }
 
             var stok = await _db.DepoStoklar
-                .Include(s => s.Malzeme)
-                .FirstOrDefaultAsync(s => s.Id == stokId);
+              .Include(s => s.Malzeme)
+              .FirstOrDefaultAsync(s => s.Id == stokId);
 
             if (stok == null)
             {
@@ -412,8 +444,8 @@ namespace ArıtmaEnvanter.Controllers
                 if (item.Miktar <= 0) continue;
 
                 var stok = await _db.DepoStoklar
-                    .Include(s => s.Malzeme)
-                    .FirstOrDefaultAsync(s => s.Id == item.StokId);
+                  .Include(s => s.Malzeme)
+                  .FirstOrDefaultAsync(s => s.Id == item.StokId);
 
                 if (stok == null || stok.Miktar < item.Miktar) continue;
 
@@ -477,25 +509,25 @@ namespace ArıtmaEnvanter.Controllers
             if (!string.IsNullOrEmpty(formNo))
             {
                 hareketler = await _db.DepoHareketler
-                    .Include(h => h.Malzeme)
-                        .ThenInclude(m => m.Kategori)
-                    .Include(h => h.Malzeme)
-                        .ThenInclude(m => m.Birim)
-                    .Include(h => h.KaynakDepo)
-                    .Include(h => h.RafTanim)
-                    .Where(h => h.CikisFormNo == formNo && h.HedefDepoId == null)
-                    .ToListAsync();
+                  .Include(h => h.Malzeme)
+                    .ThenInclude(m => m.Kategori)
+                  .Include(h => h.Malzeme)
+                    .ThenInclude(m => m.Birim)
+                  .Include(h => h.KaynakDepo)
+                  .Include(h => h.RafTanim)
+                  .Where(h => h.CikisFormNo == formNo && h.HedefDepoId == null)
+                  .ToListAsync();
             }
             else if (id.HasValue)
             {
                 var h = await _db.DepoHareketler
-                    .Include(h => h.Malzeme)
-                        .ThenInclude(m => m.Kategori)
-                    .Include(h => h.Malzeme)
-                        .ThenInclude(m => m.Birim)
-                    .Include(h => h.KaynakDepo)
-                    .Include(h => h.RafTanim)
-                    .FirstOrDefaultAsync(h => h.Id == id.Value && h.HedefDepoId == null);
+                  .Include(h => h.Malzeme)
+                    .ThenInclude(m => m.Kategori)
+                  .Include(h => h.Malzeme)
+                    .ThenInclude(m => m.Birim)
+                  .Include(h => h.KaynakDepo)
+                  .Include(h => h.RafTanim)
+                  .FirstOrDefaultAsync(h => h.Id == id.Value && h.HedefDepoId == null);
                 if (h != null)
                 {
                     hareketler.Add(h);
@@ -512,8 +544,8 @@ namespace ArıtmaEnvanter.Controllers
             if (!string.IsNullOrEmpty(ilkHareket.CikisFormNo))
             {
                 var zimmet = await _db.Zimmetler
-                    .Include(z => z.Personel)
-                    .FirstOrDefaultAsync(z => z.Notlar == ilkHareket.CikisFormNo);
+                  .Include(z => z.Personel)
+                  .FirstOrDefaultAsync(z => z.Notlar == ilkHareket.CikisFormNo);
 
                 if (zimmet != null)
                 {
@@ -611,20 +643,20 @@ namespace ArıtmaEnvanter.Controllers
             }
 
             var cikisHareketleri = await _db.DepoHareketler
-                .Include(h => h.Malzeme)
-                .Include(h => h.RafTanim)
-                .Where(h => h.CikisFormNo == formNo.Trim() && h.HedefDepoId == null) // Çıkış işlemleri
-                .Select(h => new
-                {
-                    h.Id,
-                    MalzemeAd = h.Malzeme.Ad,
-                    Birim = h.Malzeme.Birim != null ? h.Malzeme.Birim.Ad : "Adet",
-                    RafAd = h.RafTanim != null ? h.RafTanim.Ad : "Genel Alan",
-                    RafNo = h.RafNo,
-                    CikisMiktari = h.Miktar,
-                    Tarih = h.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
-                })
-                .ToListAsync();
+              .Include(h => h.Malzeme)
+              .Include(h => h.RafTanim)
+              .Where(h => h.CikisFormNo == formNo.Trim() && h.HedefDepoId == null) // Çıkış işlemleri
+                      .Select(h => new
+                      {
+                          h.Id,
+                          MalzemeAd = h.Malzeme.Ad,
+                          Birim = h.Malzeme.Birim != null ? h.Malzeme.Birim.Ad : "Adet",
+                          RafAd = h.RafTanim != null ? h.RafTanim.Ad : "Genel Alan",
+                          RafNo = h.RafNo,
+                          CikisMiktari = h.Miktar,
+                          Tarih = h.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                      })
+              .ToListAsync();
 
             if (!cikisHareketleri.Any())
             {
@@ -657,8 +689,8 @@ namespace ArıtmaEnvanter.Controllers
                 if (item.IadeMiktari <= 0) continue;
 
                 var cikisHareket = await _db.DepoHareketler
-                    .Include(h => h.Malzeme)
-                    .FirstOrDefaultAsync(h => h.Id == item.HareketId && h.CikisFormNo == cikisFormNo);
+                  .Include(h => h.Malzeme)
+                  .FirstOrDefaultAsync(h => h.Id == item.HareketId && h.CikisFormNo == cikisFormNo);
 
                 if (cikisHareket == null || item.IadeMiktari > cikisHareket.Miktar) continue;
 
@@ -668,10 +700,10 @@ namespace ArıtmaEnvanter.Controllers
 
 
                 var stok = await _db.DepoStoklar
-                    .FirstOrDefaultAsync(s => s.MalzemeId == cikisHareket.MalzemeId
-                                        && s.DepoId == cikisHareket.KaynakDepoId.Value
-                                        && s.RafTanimId == hedefRafId
-                                        && (s.RafNo == null ? hedefRafNo == null : s.RafNo.Trim() == (hedefRafNo ?? "").Trim()));
+                  .FirstOrDefaultAsync(s => s.MalzemeId == cikisHareket.MalzemeId
+                            && s.DepoId == cikisHareket.KaynakDepoId.Value
+                            && s.RafTanimId == hedefRafId
+                            && (s.RafNo == null ? hedefRafNo == null : s.RafNo.Trim() == (hedefRafNo ?? "").Trim()));
 
                 if (stok == null)
                 {
@@ -714,9 +746,9 @@ namespace ArıtmaEnvanter.Controllers
 
 
                 var zimmetler = await _db.Zimmetler
-                    .Where(z => z.MalzemeId == cikisHareket.MalzemeId && z.Notlar == cikisFormNo && z.Durum != "İade Edildi")
-                    .Take((int)item.IadeMiktari)
-                    .ToListAsync();
+                  .Where(z => z.MalzemeId == cikisHareket.MalzemeId && z.Notlar == cikisFormNo && z.Durum != "İade Edildi")
+                  .Take((int)item.IadeMiktari)
+                  .ToListAsync();
 
                 foreach (var zimmet in zimmetler)
                 {
@@ -751,14 +783,14 @@ namespace ArıtmaEnvanter.Controllers
             }
 
             var hareketler = await _db.DepoHareketler
-                .Include(h => h.Malzeme)
-                    .ThenInclude(m => m.Kategori)
-                .Include(h => h.Malzeme)
-                    .ThenInclude(m => m.Birim)
-                .Include(h => h.HedefDepo)
-                .Include(h => h.RafTanim)
-                .Where(h => h.CikisFormNo == formNo && h.HedefDepoId != null)
-                .ToListAsync();
+              .Include(h => h.Malzeme)
+                .ThenInclude(m => m.Kategori)
+              .Include(h => h.Malzeme)
+                .ThenInclude(m => m.Birim)
+              .Include(h => h.HedefDepo)
+              .Include(h => h.RafTanim)
+              .Where(h => h.CikisFormNo == formNo && h.HedefDepoId != null)
+              .ToListAsync();
 
             if (!hareketler.Any())
             {
