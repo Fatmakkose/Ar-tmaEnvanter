@@ -48,7 +48,7 @@ namespace ArıtmaEnvanter.Controllers
                 stoklarQuery = stoklarQuery.Where(s => s.Malzeme.Ad.Contains(arama) || s.Malzeme.MalzemeTuru.Contains(arama));
             }
 
-            var stoklar = await stoklarQuery.OrderBy(s => s.Malzeme.Ad).ToListAsync();
+            var stoklar = await stoklarQuery.OrderByDescending(s => s.GuncellemeTarihi).ToListAsync();
 
 
             var sablonlar = await _db.FormSablonlar.Include(f => f.Kategori).ToListAsync();
@@ -153,13 +153,23 @@ namespace ArıtmaEnvanter.Controllers
             string kullaniciAdSoyad = await GetKullaniciAdSoyad();
 
 
-            var stok = await _db.DepoStoklar
-                .FirstOrDefaultAsync(s => s.MalzemeId == malzemeId
-                                        && s.DepoId == gercekDepoId
-                                        && s.RafTanimId == rafTanimId
-                                        && (s.RafNo == null ? rafNo == null : s.RafNo.Trim() == (rafNo ?? "").Trim())
-                                        && s.UrunAdi.Trim() == temizUrunAdi
-                                        && s.Birim == birim);
+            // RafTanim bilgisini kontrol et
+            var rafTanim = rafTanimId.HasValue ? await _db.RafTanimlar.FindAsync(rafTanimId.Value) : null;
+            bool isKimyasalRaf = rafTanim != null && (rafTanim.Ad.ToUpper().Contains("KİMYASAL") || rafTanim.Ad.ToUpper().Contains("KIMYASAL"));
+
+            DepoStok? stok = null;
+            
+            // Eğer kimyasal rafı DEĞİLSE, mevcut kaydı bulup üstüne eklemeye çalış (üst üste binmemesi için)
+            if (!isKimyasalRaf)
+            {
+                stok = await _db.DepoStoklar
+                    .FirstOrDefaultAsync(s => s.MalzemeId == malzemeId
+                                            && s.DepoId == gercekDepoId
+                                            && s.RafTanimId == rafTanimId
+                                            && (s.RafNo == null ? rafNo == null : s.RafNo.Trim() == (rafNo ?? "").Trim())
+                                            && s.UrunAdi.Trim() == temizUrunAdi
+                                            && s.Birim == birim);
+            }
 
             if (stok == null)
             {
@@ -312,20 +322,29 @@ namespace ArıtmaEnvanter.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMalzemeMevcutStoklar(int malzemeId)
+        public async Task<IActionResult> GetMalzemeMevcutStoklar(int malzemeId, int? depoId)
         {
-            var stoklar = await _db.DepoStoklar
+            var query = _db.DepoStoklar
               .Include(s => s.RafTanim)
-              .Where(s => s.MalzemeId == malzemeId && s.Miktar > 0)
+              .Where(s => s.MalzemeId == malzemeId && s.Miktar > 0);
+
+            if (depoId.HasValue && depoId.Value > 0)
+            {
+                query = query.Where(s => s.DepoId == depoId.Value);
+            }
+
+            var stoklar = await query
               .OrderBy(s => (s.RafTanim != null ? s.RafTanim.Ad : "Genel Alan"))
               .Select(s => new
               {
                   s.Id,
                   UrunAdi = s.UrunAdi,
                   RafAd = s.RafTanim != null ? s.RafTanim.Ad : "Genel Alan",
+                  DepoAdi = s.Depo != null ? s.Depo.Ad : "Bilinmiyor",
                   RafNo = s.RafNo,
                   s.Miktar,
-                  s.Birim
+                  s.Birim,
+                  IsKimyasal = s.RafTanim != null && (s.RafTanim.Ad.ToUpper().Contains("KİMYASAL") || s.RafTanim.Ad.ToUpper().Contains("KIMYASAL"))
               })
               .ToListAsync();
 
@@ -356,11 +375,19 @@ namespace ArıtmaEnvanter.Controllers
 
             var stok = await _db.DepoStoklar
               .Include(s => s.Malzeme)
+              .Include(s => s.RafTanim)
               .FirstOrDefaultAsync(s => s.Id == stokId);
 
             if (stok == null)
             {
                 TempData["Hata"] = "Stok kaydı bulunamadı.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            bool isKimyasal = stok.RafTanim != null && (stok.RafTanim.Ad.ToUpper().Contains("KİMYASAL") || stok.RafTanim.Ad.ToUpper().Contains("KIMYASAL"));
+            if (isKimyasal && miktar % 25 != 0)
+            {
+                TempData["Hata"] = "Kimyasal çıkışları 25'in katları (1 bidon/torba) olmalıdır.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -395,18 +422,16 @@ namespace ArıtmaEnvanter.Controllers
 
             if (cikisTuru == "Demirbaş" && personelId.HasValue)
             {
-                for (int i = 0; i < (int)miktar; i++)
+                var zimmet = new Zimmet
                 {
-                    var zimmet = new Zimmet
-                    {
-                        MalzemeId = stok.MalzemeId,
-                        PersonelId = personelId.Value,
-                        Durum = "Aktif",
-                        ZimmetTarihi = DateTime.UtcNow,
-                        Notlar = cikisFormNo
-                    };
-                    _db.Zimmetler.Add(zimmet);
-                }
+                    MalzemeId = stok.MalzemeId,
+                    PersonelId = personelId.Value,
+                    Durum = "Aktif",
+                    ZimmetTarihi = DateTime.UtcNow,
+                    ZimmetMiktari = miktar,
+                    Notlar = cikisFormNo
+                };
+                _db.Zimmetler.Add(zimmet);
             }
 
             await _db.SaveChangesAsync();
@@ -445,9 +470,13 @@ namespace ArıtmaEnvanter.Controllers
 
                 var stok = await _db.DepoStoklar
                   .Include(s => s.Malzeme)
+                  .Include(s => s.RafTanim)
                   .FirstOrDefaultAsync(s => s.Id == item.StokId);
 
                 if (stok == null || stok.Miktar < item.Miktar) continue;
+
+                bool isKimyasal = stok.RafTanim != null && (stok.RafTanim.Ad.ToUpper().Contains("KİMYASAL") || stok.RafTanim.Ad.ToUpper().Contains("KIMYASAL"));
+                if (isKimyasal && item.Miktar % 25 != 0) continue; // Skip invalid chemical amounts in bulk exit
 
                 stok.Miktar -= item.Miktar;
                 stok.IslemYapanKisi = await GetKullaniciAdSoyad();
@@ -471,18 +500,16 @@ namespace ArıtmaEnvanter.Controllers
 
                 if (item.CikisTuru == "Demirbaş" && personelId.HasValue)
                 {
-                    for (int i = 0; i < (int)item.Miktar; i++)
+                    var zimmet = new Zimmet
                     {
-                        var zimmet = new Zimmet
-                        {
-                            MalzemeId = stok.MalzemeId,
-                            PersonelId = personelId.Value,
-                            Durum = "Aktif",
-                            ZimmetTarihi = DateTime.UtcNow,
-                            Notlar = cikisFormNo
-                        };
-                        _db.Zimmetler.Add(zimmet);
-                    }
+                        MalzemeId = stok.MalzemeId,
+                        PersonelId = personelId.Value,
+                        Durum = "Aktif",
+                        ZimmetTarihi = DateTime.UtcNow,
+                        ZimmetMiktari = item.Miktar,
+                        Notlar = cikisFormNo
+                    };
+                    _db.Zimmetler.Add(zimmet);
                 }
 
                 basariliCikisSayisi++;
@@ -745,16 +772,24 @@ namespace ArıtmaEnvanter.Controllers
                 _db.DepoHareketler.Add(yeniHareket);
 
 
-                var zimmetler = await _db.Zimmetler
-                  .Where(z => z.MalzemeId == cikisHareket.MalzemeId && z.Notlar == cikisFormNo && z.Durum != "İade Edildi")
-                  .Take((int)item.IadeMiktari)
-                  .ToListAsync();
+                var zimmet = await _db.Zimmetler
+                    .Where(z => z.MalzemeId == cikisHareket.MalzemeId && z.Notlar == cikisFormNo && z.Durum != "İade Edildi")
+                    .FirstOrDefaultAsync();
 
-                foreach (var zimmet in zimmetler)
+                if (zimmet != null)
                 {
-                    zimmet.Durum = "İade Edildi";
-                    zimmet.IadeTarihi = DateTime.UtcNow;
-                    _db.Zimmetler.Update(zimmet);
+                    if (zimmet.ZimmetMiktari > item.IadeMiktari)
+                    {
+                        zimmet.ZimmetMiktari -= item.IadeMiktari;
+                        _db.Zimmetler.Update(zimmet);
+                    }
+                    else
+                    {
+                        zimmet.Durum = "İade Edildi";
+                        zimmet.IadeTarihi = DateTime.UtcNow;
+                        zimmet.ZimmetMiktari = 0;
+                        _db.Zimmetler.Update(zimmet);
+                    }
                 }
 
                 basariliIadeSayisi++;

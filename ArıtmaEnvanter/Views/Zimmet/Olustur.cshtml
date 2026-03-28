@@ -50,6 +50,11 @@
             </div>
 
             <div class="mb-3">
+                <label class="form-label">Miktar <span style="color:#ef4444;">*</span></label>
+                <input type="number" asp-for="ZimmetMiktari" class="form-control" step="0.01" required value="1" />
+            </div>
+
+            <div class="mb-3">
                 <label class="form-label">Notlar</label>
                 <textarea asp-for="Notlar" class="form-control" rows="3"
                           placeholder="Zimmetle ilgili notlar..."></textarea>

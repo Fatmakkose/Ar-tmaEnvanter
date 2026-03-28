@@ -13,6 +13,7 @@ namespace ArıtmaEnvanter.Models.Entities
         public Urun? Urun { get; set; }
         public DateTime ZimmetTarihi { get; set; } = DateTime.Now;
         public DateTime? IadeTarihi { get; set; }
+        public decimal ZimmetMiktari { get; set; } = 1;
         public string? Notlar { get; set; }
         public string Durum { get; set; } = "Aktif";
     }

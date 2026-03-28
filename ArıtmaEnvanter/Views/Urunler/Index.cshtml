@@ -53,7 +53,7 @@
                 <label class="form-label" style="font-size:12px; font-weight:700; color:var(--primary);">Ürün Ara:</label>
                 <div class="search-box" style="width:100%;">
                     <i class="bi bi-search"></i>
-                    <input type="text" name="arama" value="@ViewBag.Arama" placeholder="Ürün Ara..." />
+                    <input type="text" name="arama" value="@ViewBag.Arama" />
                 </div>
             </div>
             <div class="col-md-3">
@@ -95,7 +95,10 @@ else
                         <tr>
                             <th>Ürün Adı</th>
                             <th>İşlem Yapan Kişi</th>
-                            <th>Miktar</th>
+                            @if (!isKimyasal)
+                            {
+                                <th>Miktar</th>
+                            }
                             @if (isKimyasal)
                             {
                                 <th style="color:#795548;">🧪 Bidon Sayısı</th>
@@ -112,7 +115,7 @@ else
                             <tr>
                                 <td style="font-weight:700; color:var(--primary);">
                                     @(stok.UrunAdi ?? stok.Malzeme?.Ad)
-                                    @if (!string.IsNullOrEmpty(stok.RafNo))
+                                    @if (!string.IsNullOrEmpty(stok.RafNo) && !isKimyasal)
                                     {
                                         <div style="font-size:11px; color:#888;">Raf No: @stok.RafNo</div>
                                     }
@@ -120,14 +123,17 @@ else
                                 <td>
                                     <span class="badge bg-light text-dark border"><i class="bi bi-person me-1"></i> @(stok.IslemYapanKisi ?? "Belirtilmemiş")</span>
                                 </td>
-                                <td>
-                                    <span style="font-size:15px; font-weight:800; color:@(stok.Miktar > 10 ? "var(--success)" : (stok.Miktar > 0 ? "var(--warning)" : "var(--danger)"));">@stok.Miktar</span>
-                                    @if (stok.Miktar <= 10)
-                                    {
-                                        <br />
-                                        <span class="badge bg-warning text-dark mt-1" style="font-size:11px; font-weight:600;"><i class="bi bi-exclamation-triangle-fill"></i> Kritik Stok</span>
-                                    }
-                                </td>
+                                @if (!isKimyasal)
+                                {
+                                    <td>
+                                        <span style="font-size:15px; font-weight:800; color:@(stok.Miktar > 10 ? "var(--success)" : (stok.Miktar > 0 ? "var(--warning)" : "var(--danger)"));">@stok.Miktar</span>
+                                        @if (stok.Miktar <= 10)
+                                        {
+                                            <br />
+                                            <span class="badge bg-warning text-dark mt-1" style="font-size:11px; font-weight:600;"><i class="bi bi-exclamation-triangle-fill"></i> Kritik Stok</span>
+                                        }
+                                    </td>
+                                }
                                 @if (isKimyasal)
                                 {
                                     <td style="text-align:center;">
@@ -209,7 +215,7 @@ else
                                         </div>
                                     </div>
 
-                                    <!-- Stok Çıkış Modal -->
+                                   
                                     <div class="modal fade" id="cikisModal@(stok.Id)" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog">
                                             <div class="modal-content text-start">
@@ -242,9 +248,28 @@ else
                                                                 }
                                                             </select>
                                                         </div>
+                                                        @if (isKimyasal)
+                                                        {
+                                                            <div class="mb-3 p-3 rounded" style="background: #fff8e1; border: 1px solid #ffe082;">
+                                                                <label class="form-label fw-bold" style="font-size:12px; color: #795548;">
+                                                                    <i class="bi bi-calculator-fill me-1"></i> Kimyasal Bidon Hesabı (1 Bidon = 25 KG)
+                                                                </label>
+                                                                <div class="input-group input-group-sm">
+                                                                    <input type="number" class="form-control row-bidon-input" placeholder="Bidon adedi" oninput="this.closest('.modal-body').querySelector('.row-miktar-input').value = (parseFloat(this.value) || 0) * 25;">
+                                                                    <span class="input-group-text bg-white">Adet</span>
+                                                                </div>
+                                                                <div style="font-size: 11px; color: #a1887f; margin-top: 5px;">
+                                                                    <i class="bi bi-info-circle"></i> Girilen adet x 25 KG olarak aşağıya yazılacaktır.
+                                                                </div>
+                                                            </div>
+                                                        }
                                                         <div class="mb-3">
                                                             <label class="form-label">Çıkış Miktarı (@stok.Birim)</label>
-                                                            <input type="number" step="0.01" name="miktar" class="form-control" required min="0.01" max="@stok.Miktar" />
+                                                            <input type="number" step="0.01" name="miktar" class="form-control row-miktar-input" required min="0.01" max="@stok.Miktar" @(isKimyasal ? "readonly style=background-color:#f8f9fa;" : "") />
+                                                            @if (isKimyasal)
+                                                            {
+                                                                <small class="text-muted" style="font-size:11px;">Kimyasal çıkışları 25'in katları olmalıdır.</small>
+                                                            }
                                                         </div>
                                                         <div class="mb-3">
                                                             <label class="form-label">Açıklama / Çıkış Nedeni</label>
@@ -260,7 +285,6 @@ else
                                         </div>
                                     </div>
 
-                                    <!-- Stok İade Modal -->
                                     <div class="modal fade" id="iadeModal@(stok.Id)" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog">
                                             <div class="modal-content text-start">
@@ -290,7 +314,7 @@ else
                                         </div>
                                     </div>
 
-                                    <!-- Stok Düzenle Modal -->
+                                   
                                     <div class="modal fade" id="duzenleModal@(stok.Id)" tabindex="-1" aria-hidden="true">
                                         <div class="modal-dialog">
                                             <div class="modal-content text-start">
@@ -357,6 +381,19 @@ else
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="malzemeId" id="malzemeIdHidden" value="" />
                 <div class="modal-body p-4">
+                    <div class="mb-2">
+                        <label class="form-label" style="font-weight:600; font-size:13px;">Depo Seçin</label>
+                        <select name="depoId" class="form-select">
+                            <option value="">-- Depo Seçin --</option>
+                            @if (ViewBag.Depolar != null)
+                            {
+                                foreach (var d in ViewBag.Depolar)
+                                {
+                                    <option value="@d.Id">@d.Ad</option>
+                                }
+                            }
+                        </select>
+                    </div>
 
                     <div class="mb-3">
                         <label class="form-label" style="font-weight:600; font-size:13px;">Ürün Seç <span style="color:var(--danger)">*</span></label>
@@ -539,9 +576,20 @@ else
                         </div>
 
                         <div class="row g-2 align-items-end">
+                            <div class="col-12 mb-2" id="cikisKimyasalHesapDiv" style="display:none;">
+                                <div style="background: #fff8e1; padding: 10px; border-radius: 8px; border: 1px solid #ffe082;">
+                                    <label class="form-label text-muted fw-bold" style="font-size:11px; color: #795548;">
+                                        <i class="bi bi-calculator-fill me-1"></i> Kimyasal Bidon Hesabı (1 Bidon = 25 KG)
+                                    </label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" id="cikisBidonAdet" class="form-control" placeholder="Bidon adedi">
+                                        <span class="input-group-text bg-white">Adet</span>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="col-5">
                                 <label class="form-label text-muted" style="font-size:12px;">Miktar <span class="text-danger">*</span></label>
-                                <input type="number" step="1" id="genelCikisMiktar" class="form-control form-control-sm" min="1" placeholder="Miktar" disabled />
+                                <input type="number" step="0.01" id="genelCikisMiktar" class="form-control form-control-sm" min="0.01" placeholder="Miktar" disabled />
                             </div>
                             <div class="col-4">
                                 <label class="form-label text-muted" style="font-size:12px;">Çıkış Türü</label>
@@ -683,359 +731,434 @@ else
     </style>
 }
 <script>
-    
-    (function () {
-        var dropdown = document.getElementById('birimSecimDropdown');
-        var input = document.getElementById('birimInput');
-        if (dropdown && input) {
-            dropdown.addEventListener('change', function () {
-                if (this.value === 'Manuel') {
-                    input.value = '';
-                    input.readOnly = false;
-                    input.focus();
-                } else {
-                    input.value = this.value;
-                    input.readOnly = true;
-                }
-            });
-            input.value = dropdown.value;
-            input.readOnly = true;
-        }
-    })();
+     
+     (function () {
+         var dropdown = document.getElementById('birimSecimDropdown');
+         var input = document.getElementById('birimInput');
+         if (dropdown && input) {
+             dropdown.addEventListener('change', function () {
+                 if (this.value === 'Manuel') {
+                     input.value = '';
+                     input.readOnly = false;
+                     input.focus();
+                 } else {
+                     input.value = this.value;
+                     input.readOnly = true;
+                 }
+             });
+             input.value = dropdown.value;
+             input.readOnly = true;
+         }
+     })();
 
-    (function () {
-        var malzemeArama = document.getElementById('malzemeArama');
-        var malzemeListesi = document.getElementById('malzemeListesi');
-        var malzemeIdHidden = document.getElementById('malzemeIdHidden');
-        var malzemeSeciliInfo = document.getElementById('malzemeSeciliInfo');
-        var malzemeSeciliAd = document.getElementById('malzemeSeciliAd');
-        var malzemeSifirla = document.getElementById('malzemeSifirla');
-        var malzemeBilgiKarti = document.getElementById('malzemeBilgiKarti');
-        var malzemeBilgiIcerik = document.getElementById('malzemeBilgiIcerik');
-        var container = document.getElementById('dynamic-fields-container');
-        var girisKaydetBtn = document.getElementById('girisKaydetBtn');
+  
+     (function () {
+         var malzemeArama = document.getElementById('malzemeArama');
+         var malzemeListesi = document.getElementById('malzemeListesi');
+         var malzemeIdHidden = document.getElementById('malzemeIdHidden');
+         var malzemeSeciliInfo = document.getElementById('malzemeSeciliInfo');
+         var malzemeSeciliAd = document.getElementById('malzemeSeciliAd');
+         var malzemeSifirla = document.getElementById('malzemeSifirla');
+         var malzemeBilgiKarti = document.getElementById('malzemeBilgiKarti');
+         var malzemeBilgiIcerik = document.getElementById('malzemeBilgiIcerik');
+         var container = document.getElementById('dynamic-fields-container');
+         var girisKaydetBtn = document.getElementById('girisKaydetBtn');
 
-        if (malzemeArama) {
-            malzemeArama.addEventListener('focus', function () {
-                malzemeListesi.style.display = 'block';
-            });
+         if (malzemeArama) {
+             malzemeArama.addEventListener('focus', function () {
+                 malzemeListesi.style.display = 'block';
+             });
 
-            malzemeArama.addEventListener('input', function () {
-                var filter = this.value.toLocaleLowerCase('tr-TR');
-                var items = malzemeListesi.querySelectorAll('.malzeme-item');
-                var count = 0;
-                items.forEach(function (item) {
-                    var text = (item.getAttribute('data-ad') + ' ' + (item.getAttribute('data-alt') || '')).toLocaleLowerCase('tr-TR');
-                    if (text.indexOf(filter) > -1) {
-                        item.style.display = '';
-                        count++;
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-                malzemeListesi.style.display = count > 0 ? 'block' : 'none';
-            });
+             malzemeArama.addEventListener('input', function () {
+                 var filter = this.value.toLocaleLowerCase('tr-TR');
+                 var items = malzemeListesi.querySelectorAll('.malzeme-item');
+                 var count = 0;
+                 items.forEach(function (item) {
+                     var text = (item.getAttribute('data-ad') + ' ' + (item.getAttribute('data-alt') || '')).toLocaleLowerCase('tr-TR');
+                     if (text.indexOf(filter) > -1) {
+                         item.style.display = '';
+                         count++;
+                     } else {
+                         item.style.display = 'none';
+                     }
+                 });
+                 malzemeListesi.style.display = count > 0 ? 'block' : 'none';
+             });
 
-            document.addEventListener('click', function (e) {
-                if (!malzemeArama.contains(e.target) && !malzemeListesi.contains(e.target)) {
-                    malzemeListesi.style.display = 'none';
-                }
-            });
-        }
+             document.addEventListener('click', function (e) {
+                 if (!malzemeArama.contains(e.target) && !malzemeListesi.contains(e.target)) {
+                     malzemeListesi.style.display = 'none';
+                 }
+             });
+         }
 
-        malzemeListesi?.addEventListener('click', function (e) {
-            var item = e.target.closest('.malzeme-item');
-            if (item) {
-                secMalzeme(item.getAttribute('data-id'), item.getAttribute('data-ad'), item.getAttribute('data-alt'));
-            }
-        });
+         malzemeListesi?.addEventListener('click', function (e) {
+             var item = e.target.closest('.malzeme-item');
+             if (item) {
+                 secMalzeme(item.getAttribute('data-id'), item.getAttribute('data-ad'), item.getAttribute('data-alt'));
+             }
+         });
 
-        function secMalzeme(id, ad, alt) {
-            malzemeIdHidden.value = id;
-            malzemeSeciliAd.textContent = ad;
-            document.getElementById('malzemeSeciliDetay').textContent = alt ? '(' + alt + ')' : '';
-            document.getElementById('malzemeSecimAlani').style.display = 'none';
-            malzemeSeciliInfo.style.display = 'block';
-            girisKaydetBtn.disabled = false;
-            malzemeBilgiKarti.style.display = 'none';
-            container.innerHTML = '<div style="text-align:center; padding:10px; color:var(--text-muted); font-size:13px;"><i class="bi bi-hourglass-split"></i> Form alanları yükleniyor...</div>';
+         function secMalzeme(id, ad, alt) {
+             malzemeIdHidden.value = id;
+             malzemeSeciliAd.textContent = ad;
+             document.getElementById('malzemeSeciliDetay').textContent = alt ? '(' + alt + ')' : '';
+             document.getElementById('malzemeSecimAlani').style.display = 'none';
+             malzemeSeciliInfo.style.display = 'block';
+             if(girisKaydetBtn) girisKaydetBtn.disabled = false;
+             malzemeBilgiKarti.style.display = 'none';
+             container.innerHTML = '<div style="text-align:center; padding:10px; color:var(--text-muted); font-size:13px;"><i class="bi bi-hourglass-split"></i> Form alanları yükleniyor...</div>';
 
-            fetch(`/Urunler/GetMalzemeFormAlanlari?malzemeId=${id}`)
-                .then(r => r.json())
-                .then(data => {
-                    container.innerHTML = '';
-                    if (data.success) {
-                        if (data.malzeme) {
-                            var bilgiHtml = '';
-                            if (data.malzeme.aciklama) bilgiHtml += `<div class="mb-1"><i class="bi bi-card-text me-1"></i>${data.malzeme.aciklama}</div>`;
-                            if (data.malzeme.kategori) bilgiHtml += `<div><i class="bi bi-tag me-1"></i>Kategori: <strong>${data.malzeme.kategori}</strong></div>`;
-                            if (data.malzeme.malzemeTuru) bilgiHtml += `<div class="mt-1"><i class="bi bi-info-circle me-1"></i>Tür: <span class="badge bg-light text-dark">${data.malzeme.malzemeTuru}</span></div>`;
-                            if (bilgiHtml) {
-                                malzemeBilgiIcerik.innerHTML = bilgiHtml;
-                                malzemeBilgiKarti.style.display = 'block';
-                            }
-                        }
-                        if (data.alanlar && data.alanlar.length > 0) {
-                            data.alanlar.forEach(alan => {
-                                var fieldHtml = `<div class="mb-3"><label class="form-label" style="font-weight:600; font-size:13px;">${alan.alanAdi} ${alan.gerekli ? '<span class="text-danger">*</span>' : ''}</label>`;
-                                if (alan.alanTipi === 'Metin' || alan.alanTipi === 'Uzun Metin') {
-                                    fieldHtml += `<input type="text" name="DynamicField_${alan.id}" class="form-control" ${alan.gerekli ? 'required' : ''} />`;
-                                } else if (alan.alanTipi === 'Sayı') {
-                                    fieldHtml += `<input type="number" step="any" name="DynamicField_${alan.id}" class="form-control" ${alan.gerekli ? 'required' : ''} />`;
-                                } else if (alan.alanTipi === 'Tarih') {
-                                    fieldHtml += `<input type="date" name="DynamicField_${alan.id}" class="form-control" ${alan.gerekli ? 'required' : ''} />`;
-                                } else if (alan.alanTipi === 'Seçenek' && alan.secenekler) {
-                                    var opts = alan.secenekler.split(',');
-                                    fieldHtml += `<select name="DynamicField_${alan.id}" class="form-select" ${alan.gerekli ? 'required' : ''}><option value="">-- Seçiniz --</option>`;
-                                    opts.forEach(o => { fieldHtml += `<option value="${o.trim()}">${o.trim()}</option>`; });
-                                    fieldHtml += `</select>`;
-                                } else {
-                                    fieldHtml += `<input type="text" name="DynamicField_${alan.id}" class="form-control" ${alan.gerekli ? 'required' : ''} />`;
-                                }
-                                fieldHtml += `</div>`;
-                                container.insertAdjacentHTML('beforeend', fieldHtml);
-                            });
-                        }
-                    } else {
-                        container.innerHTML = '<div class="alert alert-warning py-2 small">Form alanları yüklenemedi.</div>';
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    container.innerHTML = '<div class="alert alert-danger py-2 small">Bir hata oluştu.</div>';
-                });
-        }
+             fetch(`/Urunler/GetMalzemeFormAlanlari?malzemeId=${id}`)
+                 .then(r => r.json())
+                 .then(data => {
+                     container.innerHTML = '';
+                     if (data.success) {
+                         if (data.malzeme) {
+                             var bilgiHtml = '';
+                             if (data.malzeme.aciklama) bilgiHtml += `<div class="mb-1"><i class="bi bi-card-text me-1"></i>${data.malzeme.aciklama}</div>`;
+                             if (data.malzeme.kategori) bilgiHtml += `<div><i class="bi bi-tag me-1"></i>Kategori: <strong>${data.malzeme.kategori}</strong></div>`;
+                             if (data.malzeme.malzemeTuru) bilgiHtml += `<div class="mt-1"><i class="bi bi-info-circle me-1"></i>Tür: <span class="badge bg-light text-dark">${data.malzeme.malzemeTuru}</span></div>`;
+                             if (bilgiHtml) {
+                                 malzemeBilgiIcerik.innerHTML = bilgiHtml;
+                                 malzemeBilgiKarti.style.display = 'block';
+                             }
+                         }
+                         if (data.alanlar && data.alanlar.length > 0) {
+                             data.alanlar.forEach(alan => {
+                                 var fieldHtml = `<div class="mb-3"><label class="form-label" style="font-weight:600; font-size:13px;">${alan.alanAdi} ${alan.gerekli ? '<span class="text-danger">*</span>' : ''}</label>`;
+                                 if (alan.alanTipi === 'Metin' || alan.alanTipi === 'Uzun Metin') {
+                                     fieldHtml += `<input type="text" name="DynamicField_${alan.id}" class="form-control" ${alan.gerekli ? 'required' : ''} />`;
+                                 } else if (alan.alanTipi === 'Sayı') {
+                                     fieldHtml += `<input type="number" step="any" name="DynamicField_${alan.id}" class="form-control" ${alan.gerekli ? 'required' : ''} />`;
+                                 } else if (alan.alanTipi === 'Tarih') {
+                                     fieldHtml += `<input type="date" name="DynamicField_${alan.id}" class="form-control" ${alan.gerekli ? 'required' : ''} />`;
+                                 } else if (alan.alanTipi === 'Seçenek' && alan.secenekler) {
+                                     var opts = alan.secenekler.split(',');
+                                     fieldHtml += `<select name="DynamicField_${alan.id}" class="form-select" ${alan.gerekli ? 'required' : ''}><option value="">-- Seçiniz --</option>`;
+                                     opts.forEach(o => { fieldHtml += `<option value="${o.trim()}">${o.trim()}</option>`; });
+                                     fieldHtml += `</select>`;
+                                 } else {
+                                     fieldHtml += `<input type="text" name="DynamicField_${alan.id}" class="form-control" ${alan.gerekli ? 'required' : ''} />`;
+                                 }
+                                 fieldHtml += `</div>`;
+                                 container.insertAdjacentHTML('beforeend', fieldHtml);
+                             });
+                         }
+                     } else {
+                         container.innerHTML = '<div class="alert alert-warning py-2 small">Form alanları yüklenemedi.</div>';
+                     }
+                 })
+                 .catch(err => {
+                     console.error(err);
+                     container.innerHTML = '<div class="alert alert-danger py-2 small">Bir hata oluştu.</div>';
+                 });
+         }
 
-        malzemeSifirla?.addEventListener('click', function () {
-            document.getElementById('malzemeSecimAlani').style.display = 'block';
-            malzemeSeciliInfo.style.display = 'none';
-            malzemeIdHidden.value = '';
-            malzemeArama.value = '';
-            malzemeBilgiKarti.style.display = 'none';
-            container.innerHTML = '';
-            girisKaydetBtn.disabled = true;
-        });
-    })();
+         malzemeSifirla?.addEventListener('click', function () {
+             document.getElementById('malzemeSecimAlani').style.display = 'block';
+             malzemeSeciliInfo.style.display = 'none';
+             malzemeIdHidden.value = '';
+             malzemeArama.value = '';
+             malzemeBilgiKarti.style.display = 'none';
+             container.innerHTML = '';
+             if(girisKaydetBtn) girisKaydetBtn.disabled = true;
+         });
+     })();
 
-    
-    (function () {
-        var cikisSelect = document.getElementById('cikisMalzemeSelect');
-        var cikisStokSelect = document.getElementById('cikisStokSelect');
-        var cikisMiktarInput = document.getElementById('genelCikisMiktar');
-        var btnListeyeEkle = document.getElementById('btnListeyeEkle');
-        var cikisSeciliInfo = document.getElementById('cikisMalzemeSeciliInfo');
-        var cikisSeciliAd = document.getElementById('cikisMalzemeSeciliAd');
-        var cikisSifirlaBtn = document.getElementById('cikisMalzemeSifirla');
+     
+     (function () {
+         var cikisSelect = document.getElementById('cikisMalzemeSelect');
+         var cikisStokSelect = document.getElementById('cikisStokSelect');
+         var cikisMiktarInput = document.getElementById('genelCikisMiktar');
+         var btnListeyeEkle = document.getElementById('btnListeyeEkle');
+         var cikisSeciliInfo = document.getElementById('cikisMalzemeSeciliInfo');
+         var cikisSeciliAd = document.getElementById('cikisMalzemeSeciliAd');
+         var cikisSifirlaBtn = document.getElementById('cikisMalzemeSifirla');
 
-        if (cikisSelect) {
-            cikisSelect.addEventListener('change', function () {
-                var id = this.value;
-                var ad = this.options[this.selectedIndex].text;
-                if (id) {
-                    this.parentElement.style.display = 'none';
-                    cikisSeciliInfo.style.display = 'block';
-                    cikisSeciliAd.textContent = ad;
-                    secCikisMalzeme(id);
-                }
-            });
-        }
+         if (cikisSelect) {
+             cikisSelect.addEventListener('change', function () {
+                 var id = this.value;
+                 var ad = this.options[this.selectedIndex].text;
+                 if (id) {
+                     this.parentElement.style.display = 'none';
+                     cikisSeciliInfo.style.display = 'block';
+                     cikisSeciliAd.textContent = ad;
+                     secCikisMalzeme(id);
+                 }
+             });
+         }
 
-        function secCikisMalzeme(id) {
-            cikisStokSelect.innerHTML = '<option value="">Stoklar aranıyor...</option>';
-            cikisStokSelect.disabled = true;
-            fetch(`/Urunler/GetMalzemeMevcutStoklar?malzemeId=${id}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success && data.stoklar.length > 0) {
-                        var html = '<option value="">-- Raf/Stok Kaydı Seçin --</option>';
-                        data.stoklar.forEach(s => {
-                            html += `<option value="${s.id}" data-max="${s.miktar}" data-raf-text="${s.rafAd}" data-urun-adi="${s.urunAdi}">${s.urunAdi} - Raf: ${s.rafAd} (${s.rafNo || 'No Yok'}) - Mevcut: ${s.miktar}</option>`;
-                        });
-                        cikisStokSelect.innerHTML = html;
-                        cikisStokSelect.disabled = false;
-                    } else {
-                        cikisStokSelect.innerHTML = '<option value="">Stok bulunamadı!</option>';
-                    }
-                });
-        }
+         function secCikisMalzeme(id) {
+             cikisStokSelect.innerHTML = '<option value="">Stoklar aranıyor...</option>';
+             cikisStokSelect.disabled = true;
+             fetch(`/Urunler/GetMalzemeMevcutStoklar?malzemeId=${id}`)
+                 .then(r => r.json())
+                 .then(data => {
+                     if (data.success && data.stoklar.length > 0) {
+                         var html = '<option value="">-- Raf/Stok Kaydı Seçin --</option>';
+                         data.stoklar.forEach(s => {
+                             html += `<option value="${s.id}" data-max="${s.miktar}" data-raf-text="${s.rafAd}" data-urun-adi="${s.urunAdi}" data-is-kimyasal="${s.isKimyasal}">${s.urunAdi} - Raf: ${s.rafAd} (${s.rafNo || 'No Yok'}) - Mevcut: ${s.miktar}</option>`;
+                         });
+                         cikisStokSelect.innerHTML = html;
+                         cikisStokSelect.disabled = false;
+                     } else {
+                         cikisStokSelect.innerHTML = '<option value="">Stok bulunamadı!</option>';
+                     }
+                 });
+         }
 
-        if (cikisStokSelect) {
-            cikisStokSelect.addEventListener('change', function () {
-                var selectedOpt = this.options[this.selectedIndex];
-                var maxMiktar = selectedOpt ? selectedOpt.getAttribute('data-max') : null;
-                var mevcutBilgi = document.getElementById('cikisMevcutStokBilgi');
-                var cikisTuruSelect = document.getElementById('genelCikisTuru');
-                if (this.value && maxMiktar) {
-                    cikisMiktarInput.disabled = false;
-                    cikisMiktarInput.max = maxMiktar;
-                    cikisMiktarInput.placeholder = 'Maks: ' + maxMiktar;
-                    if (cikisTuruSelect) cikisTuruSelect.disabled = false;
-                    btnListeyeEkle.disabled = false;
-                    if (mevcutBilgi) mevcutBilgi.textContent = 'Mevcut stok: ' + maxMiktar + ' adet';
-                } else {
-                    cikisMiktarInput.disabled = true;
-                    cikisMiktarInput.max = '';
-                    cikisMiktarInput.placeholder = 'Miktar';
-                    if (cikisTuruSelect) cikisTuruSelect.disabled = true;
-                    btnListeyeEkle.disabled = true;
-                    if (mevcutBilgi) mevcutBilgi.textContent = '';
-                }
-            });
-        }
+         if (cikisStokSelect) {
+             cikisStokSelect.addEventListener('change', function () {
+                 var selectedOpt = this.options[this.selectedIndex];
+                 var maxMiktar = selectedOpt ? selectedOpt.getAttribute('data-max') : null;
+                 var isKimyasal = selectedOpt ? selectedOpt.getAttribute('data-is-kimyasal') === 'true' : false;
+                 var mevcutBilgi = document.getElementById('cikisMevcutStokBilgi');
+                 var cikisTuruSelect = document.getElementById('genelCikisTuru');
+                 var kimyasalDiv = document.getElementById('cikisKimyasalHesapDiv');
 
-        function sifirlaSecimAlani() {
-            cikisSelect.parentElement.style.display = 'block';
-            cikisSelect.value = '';
-            cikisSeciliInfo.style.display = 'none';
-            cikisStokSelect.innerHTML = '<option value="">Önce ürün seçiniz...</option>';
-            cikisStokSelect.disabled = true;
-            cikisMiktarInput.value = '';
-            cikisMiktarInput.disabled = true;
-            cikisMiktarInput.max = '';
-            cikisMiktarInput.placeholder = 'Miktar';
-            var cikisTuruSelect = document.getElementById('genelCikisTuru');
-            if (cikisTuruSelect) cikisTuruSelect.disabled = true;
-            btnListeyeEkle.disabled = true;
-            var mevcutBilgi = document.getElementById('cikisMevcutStokBilgi');
-            if (mevcutBilgi) mevcutBilgi.textContent = '';
-        }
+                 if (this.value && maxMiktar) {
+                     cikisMiktarInput.disabled = false;
+                     cikisMiktarInput.max = maxMiktar;
+                     cikisMiktarInput.placeholder = 'Maks: ' + maxMiktar;
+                     if (cikisTuruSelect) cikisTuruSelect.disabled = false;
+                     btnListeyeEkle.disabled = false;
+                     if (mevcutBilgi) mevcutBilgi.textContent = 'Mevcut stok: ' + maxMiktar + ' adet';
+                     
+                     if (kimyasalDiv) {
+                         kimyasalDiv.style.display = isKimyasal ? 'block' : 'none';
+                         if (isKimyasal) {
+                             cikisMiktarInput.readOnly = true;
+                             cikisMiktarInput.style.backgroundColor = "#f8f9fa";
+                         } else {
+                             cikisMiktarInput.readOnly = false;
+                             cikisMiktarInput.style.backgroundColor = "#fff";
+                         }
+                     }
+                 } else {
+                     cikisMiktarInput.disabled = true;
+                     cikisMiktarInput.max = '';
+                     cikisMiktarInput.placeholder = 'Miktar';
+                     if (cikisTuruSelect) cikisTuruSelect.disabled = true;
+                     btnListeyeEkle.disabled = true;
+                     if (mevcutBilgi) mevcutBilgi.textContent = '';
+                     if (kimyasalDiv) kimyasalDiv.style.display = 'none';
+                 }
+             });
+         }
 
-        cikisSifirlaBtn?.addEventListener('click', sifirlaSecimAlani);
+         if (btnListeyeEkle) {
+             btnListeyeEkle.addEventListener('click', function () {
+                 var stokId = cikisStokSelect.value;
+                 var miktar = parseFloat(cikisMiktarInput.value);
+                 var maxMiktar = parseFloat(cikisMiktarInput.max);
+                 var tur = document.getElementById('genelCikisTuru').value;
+                 var selectedOpt = cikisStokSelect.options[cikisStokSelect.selectedIndex];
+                 var isKimyasal = selectedOpt.getAttribute('data-is-kimyasal') === 'true';
 
-        var listeSayac = 0;
-        if (btnListeyeEkle) {
-            btnListeyeEkle.addEventListener('click', function () {
-                var stokOpt = cikisStokSelect.options[cikisStokSelect.selectedIndex];
-                var stokId = cikisStokSelect.value;
-                var rafText = stokOpt ? stokOpt.getAttribute('data-raf-text') : '';
-                var maxMiktar = stokOpt ? parseFloat(stokOpt.getAttribute('data-max')) : 0;
-                var miktar = parseFloat(cikisMiktarInput.value);
-                var cikisTuruSelect = document.getElementById('genelCikisTuru');
-                var tur = cikisTuruSelect ? cikisTuruSelect.value : 'Tüketim';
-                var urunAdi = stokOpt ? stokOpt.getAttribute('data-urun-adi') : cikisSeciliAd.textContent;
+                 if (!stokId || !miktar || miktar <= 0) {
+                     alert('Geçerli bir miktar giriniz.');
+                     return;
+                 }
+                 if (miktar > maxMiktar) {
+                     alert('Stok miktarından fazla çıkış yapamazsınız.');
+                     return;
+                 }
+                 if (isKimyasal && miktar % 25 !== 0) {
+                     alert('Kimyasal çıkışları 25 (1 bidon/torba) katları olmalıdır. Lütfen bidon hesabını kullanınız.');
+                     return;
+                 }
 
-                if (!stokId || isNaN(miktar) || miktar <= 0) { alert('Lütfen raf/stok kaydı seçin ve geçerli bir miktar girin.'); return; }
-                if (miktar > maxMiktar) { alert('Girilen miktar mevcut stoktan (' + maxMiktar + ') fazla olamaz!'); return; }
+                 var urunAdi = selectedOpt.getAttribute('data-urun-adi');
+                 var rafAd = selectedOpt.getAttribute('data-raf-text');
+                 var satirId = Date.now();
+                 var miktarGosterim = isKimyasal ? (miktar / 25).toFixed(2).replace(/\.?0+$/, "") + " Bidon" : miktar;
 
-                var bosListeSatiri = document.getElementById('bosListeSatiri');
-                if (bosListeSatiri) bosListeSatiri.style.display = 'none';
+                 var tr = `<tr data-satir-id="${satirId}">
+                     <td>${urunAdi}</td>
+                     <td>${rafAd}</td>
+                     <td><span class="badge ${tur === 'Demirbaş' ? 'bg-danger' : 'bg-primary'}">${tur}</span></td>
+                     <td><strong>${miktarGosterim}</strong></td>
+                     <td style="text-align:center;">
+                         <button type="button" class="btn btn-sm text-danger" onclick="satirSil(this, ${satirId})">✕</button>
+                     </td>
+                 </tr>`;
 
-                var tbody = document.querySelector('#topluCikisTablosu tbody');
-                var satir = document.createElement('tr');
-                satir.setAttribute('data-satir-id', listeSayac);
-                satir.innerHTML =
-                    '<td><strong>' + urunAdi + '</strong></td>' +
-                    '<td>' + (rafText || 'Genel Alan') + '</td>' +
-                    '<td><span class="badge ' + (tur === 'Demirbaş' ? 'bg-danger' : 'bg-secondary') + '">' + tur + '</span></td>' +
-                    '<td>' + miktar + '</td>' +
-                    '<td style="text-align:center;"><button type="button" class="btn btn-sm btn-outline-danger" onclick="satirSil(this,' + listeSayac + ')" style="padding:2px 7px;font-size:11px;">✕</button></td>';
-                tbody.appendChild(satir);
+                 document.querySelector('#topluCikisTablosu tbody').insertAdjacentHTML('beforeend', tr);
+                 document.getElementById('bosListeSatiri').style.display = 'none';
+                 document.getElementById('genelCikisKaydetBtn').disabled = false;
 
-                var gizliAlan = document.getElementById('gizliGirdilerMekani');
-                var inputGroup = document.createElement('div');
-                inputGroup.setAttribute('data-grup-id', listeSayac);
-                inputGroup.innerHTML =
-                    '<input type="hidden" name="items[' + listeSayac + '].StokId" value="' + stokId + '" />' +
-                    '<input type="hidden" name="items[' + listeSayac + '].Miktar" value="' + miktar + '" />' +
-                    '<input type="hidden" name="items[' + listeSayac + '].CikisTuru" value="' + tur + '" />';
-                gizliAlan.appendChild(inputGroup);
+                 var gizliHtml = `
+                     <div data-grup-id="${satirId}">
+                         <input type="hidden" name="items.Index" value="${satirId}" />
+                         <input type="hidden" name="items[${satirId}].StokId" value="${stokId}" />
+                         <input type="hidden" name="items[${satirId}].Miktar" value="${miktar.toString().replace('.', ',')}" />
+                         <input type="hidden" name="items[${satirId}].CikisTuru" value="${tur}" />
+                     </div>`;
+                 document.getElementById('gizliGirdilerMekani').insertAdjacentHTML('beforeend', gizliHtml);
 
-                listeSayac++;
-                document.getElementById('genelCikisKaydetBtn').disabled = false;
+                 if (tur === 'Demirbaş') {
+                     document.getElementById('genelPersonelDiv').style.display = 'block';
+                     document.getElementById('genelPersonelSelect').required = true;
+                 }
 
-                var genelPersonelDiv = document.getElementById('genelPersonelDiv');
-                if (genelPersonelDiv) {
-                    var tumSatirlar = tbody.querySelectorAll('tr[data-satir-id]');
-                    var demirbas = Array.from(tumSatirlar).some(function (r) { return r.querySelector('.badge.bg-danger'); });
-                    genelPersonelDiv.style.display = demirbas ? 'block' : 'none';
-                }
-                sifirlaSecimAlani();
-            });
-        }
-    })();
+                 // Sıfırla
+                 cikisStokSelect.value = '';
+                 cikisMiktarInput.value = '';
+                 cikisMiktarInput.disabled = true;
+                 btnListeyeEkle.disabled = true;
+                 document.getElementById('cikisMevcutStokBilgi').textContent = '';
+                 var kimyasalDiv = document.getElementById('cikisKimyasalHesapDiv');
+                 if (kimyasalDiv) kimyasalDiv.style.display = 'none';
+                 document.getElementById('cikisBidonAdet').value = '';
+             });
+         }
 
-    
-    function satirSil(btn, satirId) {
-        var satir = document.querySelector('tr[data-satir-id="' + satirId + '"]');
-        if (satir) satir.remove();
-        var grup = document.querySelector('[data-grup-id="' + satirId + '"]');
-        if (grup) grup.remove();
-        var tbody = document.querySelector('#topluCikisTablosu tbody');
-        var kalanSatirlar = tbody.querySelectorAll('tr[data-satir-id]');
-        if (kalanSatirlar.length === 0) {
-            document.getElementById('bosListeSatiri').style.display = '';
-            document.getElementById('genelCikisKaydetBtn').disabled = true;
-            var gpd = document.getElementById('genelPersonelDiv');
-            if (gpd) gpd.style.display = 'none';
-        } else {
-            var gpd = document.getElementById('genelPersonelDiv');
-            if (gpd) {
-                var demirbas = Array.from(kalanSatirlar).some(function (r) { return r.querySelector('.badge.bg-danger'); });
-                gpd.style.display = demirbas ? 'block' : 'none';
-            }
-        }
-    }
+         function sifirlaSecimAlani() {
+             if(cikisSelect) {
+                 cikisSelect.parentElement.style.display = 'block';
+                 cikisSelect.value = '';
+             }
+             if(cikisSeciliInfo) cikisSeciliInfo.style.display = 'none';
+             if(cikisStokSelect) {
+                 cikisStokSelect.innerHTML = '<option value="">Önce ürün seçiniz...</option>';
+                 cikisStokSelect.disabled = true;
+             }
+             if(cikisMiktarInput) {
+                 cikisMiktarInput.value = '';
+                 cikisMiktarInput.disabled = true;
+                 cikisMiktarInput.max = '';
+                 cikisMiktarInput.placeholder = 'Miktar';
+             }
+             var cikisTuruSelect = document.getElementById('genelCikisTuru');
+             if (cikisTuruSelect) cikisTuruSelect.disabled = true;
+             if(btnListeyeEkle) btnListeyeEkle.disabled = true;
+             var mevcutBilgi = document.getElementById('cikisMevcutStokBilgi');
+             if (mevcutBilgi) mevcutBilgi.textContent = '';
+         }
 
-    
-    document.addEventListener('change', function (e) {
-        if (e.target && e.target.name === 'rafTanimId') {
-            const modal = e.target.closest('.modal-content');
-            const rafNoInput = modal.querySelector('input[name="rafNo"]');
-            const rafNoAlani = modal.querySelector('#rafNoAlani');
-            const secilenMetin = e.target.options[e.target.selectedIndex].text.trim().toUpperCase();
+         cikisSifirlaBtn?.addEventListener('click', sifirlaSecimAlani);
+     })();
 
-            const isKimyasal = secilenMetin.includes("KİMYASAL") || secilenMetin.includes("KIMYASAL");
+     
+     function satirSil(btn, satirId) {
+         var satir = document.querySelector('tr[data-satir-id="' + satirId + '"]');
+         if (satir) satir.remove();
+         var grup = document.querySelector('[data-grup-id="' + satirId + '"]');
+         if (grup) grup.remove();
+         var tbody = document.querySelector('#topluCikisTablosu tbody');
+         var kalanSatirlar = tbody.querySelectorAll('tr[data-satir-id]');
+         if (kalanSatirlar.length === 0) {
+             document.getElementById('bosListeSatiri').style.display = '';
+             document.getElementById('genelCikisKaydetBtn').disabled = true;
+             var gpd = document.getElementById('genelPersonelDiv');
+             if (gpd) gpd.style.display = 'none';
+         } else {
+             var gpd = document.getElementById('genelPersonelDiv');
+             if (gpd) {
+                 var demirbas = Array.from(kalanSatirlar).some(function (r) { return r.querySelector('.badge.bg-danger'); });
+                 gpd.style.display = demirbas ? 'block' : 'none';
+             }
+         }
+     }
 
-            if (e.target.value !== "" && secilenMetin !== "") {
-                rafNoInput.value = secilenMetin.charAt(0) + "-";
-                if (!isKimyasal) {
-                    rafNoInput.focus();
-                }
-            } else {
-                rafNoInput.value = "";
-            }
+      function updateModalVisibility(modal) {
+          if (!modal) return;
+          
+          const depoSelect = modal.querySelector('select[name="depoId"]') || modal.querySelector('select[name="DepoId"]');
+          const rafSelect = modal.querySelector('select[name="rafTanimId"]');
+          const rafNoAlani = modal.querySelector('#rafNoAlani') || modal.querySelector('input[name="rafNo"]')?.closest('.mb-3') || modal.querySelector('input[name="rafNo"]')?.closest('.mb-2');
+          const rafSecimDiv = rafSelect?.closest('.mb-2') || rafSelect?.closest('.mb-3');
+          const hesapAlani = modal.querySelector('#kimyasalHesaplamaAlani');
+          const miktarInput = modal.querySelector('input[name="miktar"]');
+          const bidonInput = modal.querySelector('#bidonAdetInput');
 
-            // Raf No alanını Kimyasal için gizle
-            if (rafNoAlani) {
-                rafNoAlani.style.display = isKimyasal ? 'none' : 'block';
-            }
+          let isGesDepo = false;
+          let isKimyasalRaf = false;
 
-            
-            const hesapAlani = modal.querySelector('#kimyasalHesaplamaAlani');
-            const miktarInput = modal.querySelector('input[name="miktar"]');
-            const bidonInput = modal.querySelector('#bidonAdetInput');
-            if (hesapAlani && miktarInput && bidonInput) {
-                if (isKimyasal) {
-                    hesapAlani.style.display = 'block';
-                    miktarInput.readOnly = true;
-                    miktarInput.style.backgroundColor = "#f8f9fa";
-                } else {
-                    hesapAlani.style.display = 'none';
-                    miktarInput.readOnly = false;
-                    miktarInput.style.backgroundColor = "#fff";
-                    bidonInput.value = "";
-                }
-            }
-        }
-    });
+          if (depoSelect && depoSelect.selectedIndex >= 0) {
+              const depoMetni = depoSelect.options[depoSelect.selectedIndex].text.trim().toUpperCase();
+              isGesDepo = (depoMetni === "GES DEPO");
+          }
 
-    document.addEventListener('input', function (e) {
-        if (e.target && e.target.name === 'rafNo') {
-            const modal = e.target.closest('.modal-content');
-            const rafSelect = modal.querySelector('select[name="rafTanimId"]');
-            if (rafSelect && rafSelect.value !== "") {
-                const prefix = rafSelect.options[rafSelect.selectedIndex].text.trim().toUpperCase().charAt(0) + "-";
-                if (!e.target.value.startsWith(prefix)) {
-                    e.target.value = prefix;
-                }
-            }
-        }
+          if (rafSelect && rafSelect.selectedIndex >= 0) {
+              const rafMetni = rafSelect.options[rafSelect.selectedIndex].text.trim().toUpperCase();
+              isKimyasalRaf = rafMetni.includes("KİMYASAL") || rafMetni.includes("KIMYASAL");
+          }
 
-        
-        if (e.target && e.target.id === 'bidonAdetInput') {
-            const modal = e.target.closest('.modal-content');
-            const miktarInput = modal.querySelector('input[name="miktar"]');
-            miktarInput.value = (parseFloat(e.target.value) || 0) * 25;
-        }
-    });
+          if (rafSecimDiv) {
+              rafSecimDiv.style.display = isGesDepo ? 'none' : 'block';
+          }
+
+          if (rafNoAlani) {
+              rafNoAlani.style.display = (isGesDepo || isKimyasalRaf) ? 'none' : 'block';
+          }
+
+          if (hesapAlani && miktarInput && bidonInput) {
+              if (isKimyasalRaf) {
+                  hesapAlani.style.display = 'block';
+                  miktarInput.readOnly = true;
+                  miktarInput.style.backgroundColor = "#f8f9fa";
+              } else {
+                  hesapAlani.style.display = 'none';
+                  miktarInput.readOnly = false;
+                  miktarInput.style.backgroundColor = "#fff";
+                  if (!bidonInput.value) bidonInput.value = "";
+              }
+          }
+      }
+
+      document.addEventListener('change', function (e) {
+          if (!e.target) return;
+          const modal = e.target.closest('.modal-content');
+          if (!modal) return;
+
+          if (e.target.name === 'depoId' || e.target.name === 'DepoId' || e.target.name === 'rafTanimId') {
+              updateModalVisibility(modal);
+
+              if (e.target.name === 'rafTanimId') {
+                  const rafNoInput = modal.querySelector('input[name="rafNo"]');
+                  const secilenMetin = e.target.options[e.target.selectedIndex].text.trim().toUpperCase();
+                  const isKimyasal = secilenMetin.includes("KİMYASAL") || secilenMetin.includes("KIMYASAL");
+
+                  if (e.target.value !== "" && secilenMetin !== "") {
+                      if(rafNoInput) rafNoInput.value = secilenMetin.charAt(0) + "";
+                      if (!isKimyasal && rafNoInput) {
+                          rafNoInput.focus();
+                      }
+                  } else {
+                      if(rafNoInput) rafNoInput.value = "";
+                  }
+              }
+              
+              if ((e.target.name === 'depoId' || e.target.name === 'DepoId') && e.target.options[e.target.selectedIndex].text.trim().toUpperCase() === "GES DEPO") {
+                 const rSelect = modal.querySelector('select[name="rafTanimId"]');
+                 const rInput = modal.querySelector('input[name="rafNo"]');
+                 if (rSelect) rSelect.value = "";
+                 if (rInput) rInput.value = "";
+              }
+          }
+      });
+
+     
+     document.addEventListener('input', function (e) {
+         if (!e.target) return;
+         const modal = e.target.closest('.modal-content');
+         if (!modal) return;
+
+         if (e.target.name === 'rafNo') {
+             const rafSelect = modal.querySelector('select[name="rafTanimId"]');
+             if (rafSelect && rafSelect.value !== "") {
+                 const prefix = rafSelect.options[rafSelect.selectedIndex].text.trim().toUpperCase().charAt(0) + "";
+                 if (!e.target.value.startsWith(prefix)) {
+                     e.target.value = prefix;
+                 }
+             }
+         }
+
+         if (e.target.id === 'bidonAdetInput' || e.target.id === 'cikisBidonAdet') {
+             const miktarInput = e.target.id === 'bidonAdetInput' ? modal.querySelector('input[name="miktar"]') : document.getElementById('genelCikisMiktar');
+             if(miktarInput) miktarInput.value = (parseFloat(e.target.value) || 0) * 25;
+         }
+     });
 </script>

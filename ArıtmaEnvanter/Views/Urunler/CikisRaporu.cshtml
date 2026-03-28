@@ -55,14 +55,27 @@
                     <td style="font-weight:600;">@x.Malzeme?.Ad</td>
                     <td>@(x.Malzeme?.Kategori?.Ad ?? x.Malzeme?.MalzemeTuru ?? "-")</td>
                     <td>
+                        @{
+                            var isKimyasal = x.RafTanim != null && (x.RafTanim.Ad.ToUpper().Contains("KİMYASAL") || x.RafTanim.Ad.ToUpper().Contains("KIMYASAL"));
+                        }
                         @(x.KaynakDepo?.Ad ?? "-") / 
                         @(x.RafTanim?.Ad ?? "Genel Alan") 
-                        @if (!string.IsNullOrEmpty(x.RafNo))
+                        @if (!string.IsNullOrEmpty(x.RafNo) && !isKimyasal)
                         {
                             <span>(No: @x.RafNo)</span>
                         }
                     </td>
-                    <td style="font-weight:700; font-size:15px;" class="text-danger">@x.Miktar.ToString("0.##") @(x.Malzeme?.Birim?.Ad ?? "Adet")</td>
+                    <td style="font-weight:700; font-size:15px;" class="text-danger">
+                        @if (isKimyasal)
+                        {
+                            <span>@((x.Miktar / 25).ToString("0.##")) Bidon</span>
+                            <br /><small class="text-muted" style="font-weight:normal; font-size:11px;">(@x.Miktar.ToString("0.##") @(x.Malzeme?.Birim?.Ad ?? "KG"))</small>
+                        }
+                        else
+                        {
+                            <span>@x.Miktar.ToString("0.##") @(x.Malzeme?.Birim?.Ad ?? "Adet")</span>
+                        }
+                    </td>
                 </tr>
             }
         </tbody>

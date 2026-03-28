@@ -154,6 +154,7 @@
                         <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">KADRO TÜRÜ</th>
                         <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">ÜNVANI</th>
                         <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">MALZEMENİN ADI</th>
+                        <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">MİKTAR</th>
                         <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">SERİ NO</th>
                         <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">TESLİM TARİHİ</th>
                         <th style="color: black; font-weight: bold; border: 1px solid #e2c050; padding: 10px;">DURUMU</th>
@@ -172,6 +173,7 @@
                             <td>@(z.Personel?.KadroTuru ?? "—")</td>
                             <td>@(z.Personel?.Unvan ?? "—")</td>
                             <td><strong>@z.Malzeme?.Ad</strong></td>
+                            <td style="font-weight:700; color:#ef4444;">@z.ZimmetMiktari.ToString("0.##")</td>
                             <td style="color:#64748b;font-size:13px;">@(z.Malzeme?.SeriNo ?? "—")</td>
                             <td style="color:#64748b;font-size:13px;">@z.ZimmetTarihi.ToLocalTime().ToString("dd.MM.yyyy")</td>
                             <td>

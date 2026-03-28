@@ -67,6 +67,7 @@
                     <thead>
                         <tr>
                             <th>Ürün</th>
+                            <th>MİKTAR</th>
                             <th>Zimmet Tarihi</th>
                             <th>İade Tarihi</th>
                             <th>Durum</th>
@@ -77,6 +78,7 @@
                         {
                             <tr>
                                 <td><strong>@(z.Malzeme?.Ad ?? "—")</strong></td>
+                                <td style="font-weight:700; color:#ef4444;">@z.ZimmetMiktari.ToString("0.##")</td>
                                 <td style="color:#64748b;font-size:13px;">@z.ZimmetTarihi.ToLocalTime().ToString("dd.MM.yyyy")
                                 </td>
                                 <td style="color:#64748b;font-size:13px;">@(z.IadeTarihi?.ToLocalTime().ToString("dd.MM.yyyy")

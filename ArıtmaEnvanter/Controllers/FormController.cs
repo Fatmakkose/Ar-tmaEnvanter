@@ -383,7 +383,8 @@ namespace ArıtmaEnvanter.Controllers
                                     UrunId = urun.Id,
                                     PersonelId = personel.Id,
                                     ZimmetTarihi = DateTime.UtcNow,
-                                    Durum = "Aktif"
+                                    Durum = "Aktif",
+                                    ZimmetMiktari = 1
                                 };
                                 _db.Zimmetler.Add(zimmet);
                             }
@@ -840,7 +841,8 @@ namespace ArıtmaEnvanter.Controllers
                                         Urun = urun,
                                         PersonelId = personel.Id,
                                         ZimmetTarihi = DateTime.UtcNow,
-                                        Durum = "Aktif"
+                                        Durum = "Aktif",
+                                        ZimmetMiktari = 1
                                     };
                                     _db.Zimmetler.Add(zimmet);
                                 }

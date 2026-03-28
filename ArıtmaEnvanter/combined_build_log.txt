@@ -1,0 +1,11 @@
+  Geri yüklenecek projeler belirleniyor...
+  Geri yükleme için tüm projeler güncel.
+C:\Program Files\dotnet\sdk\9.0.203\Microsoft.Common.CurrentVersion.targets(5364,5): warning MSB3026: "C:\Users\Fatma\source\repos\ArıtmaEnvanter\ArıtmaEnvanter\obj\Debug\net8.0\apphost.exe", "bin\Debug\net8.0\ArıtmaEnvanter.exe" üzerine kopyalanamadı. 1 numaralı yeniden denemeye 1000 ms içinde başlanacak. The process cannot access the file 'C:\Users\Fatma\source\repos\ArıtmaEnvanter\ArıtmaEnvanter\bin\Debug\net8.0\ArıtmaEnvanter.exe' because it is being used by another process. Dosya şunun tarafından kilitlendi: "ArıtmaEnvanter (14164)" [C:\Users\Fatma\source\repos\ArıtmaEnvanter\ArıtmaEnvanter\ArıtmaEnvanter.csproj]
+
+Oluşturma BAŞARISIZ OLDU.
+
+C:\Program Files\dotnet\sdk\9.0.203\Microsoft.Common.CurrentVersion.targets(5364,5): warning MSB3026: "C:\Users\Fatma\source\repos\ArıtmaEnvanter\ArıtmaEnvanter\obj\Debug\net8.0\apphost.exe", "bin\Debug\net8.0\ArıtmaEnvanter.exe" üzerine kopyalanamadı. 1 numaralı yeniden denemeye 1000 ms içinde başlanacak. The process cannot access the file 'C:\Users\Fatma\source\repos\ArıtmaEnvanter\ArıtmaEnvanter\bin\Debug\net8.0\ArıtmaEnvanter.exe' because it is being used by another process. Dosya şunun tarafından kilitlendi: "ArıtmaEnvanter (14164)" [C:\Users\Fatma\source\repos\ArıtmaEnvanter\ArıtmaEnvanter\ArıtmaEnvanter.csproj]
+    1 Uyarı
+    0 Hata
+
+Geçen Süre 00:00:03.49

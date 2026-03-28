@@ -85,13 +85,14 @@ namespace ArıtmaEnvanter.Controllers
             var ws = workbook.Worksheets.Add("Zimmetler");
 
             ws.Cell(1, 1).Value = "Ürün";
-            ws.Cell(1, 2).Value = "Personel";
-            ws.Cell(1, 3).Value = "Zimmet Tarihi";
-            ws.Cell(1, 4).Value = "İade Tarihi";
-            ws.Cell(1, 5).Value = "Durum";
-            ws.Cell(1, 6).Value = "Notlar";
+            ws.Cell(1, 2).Value = "Miktar";
+            ws.Cell(1, 3).Value = "Personel";
+            ws.Cell(1, 4).Value = "Zimmet Tarihi";
+            ws.Cell(1, 5).Value = "İade Tarihi";
+            ws.Cell(1, 6).Value = "Durum";
+            ws.Cell(1, 7).Value = "Notlar";
 
-            var baslik = ws.Range("A1:F1");
+            var baslik = ws.Range("A1:G1");
             baslik.Style.Font.Bold = true;
             baslik.Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.FromHtml("#003d7a");
             baslik.Style.Font.FontColor = ClosedXML.Excel.XLColor.White;
@@ -101,11 +102,12 @@ namespace ArıtmaEnvanter.Controllers
             foreach (var z in zimmetler)
             {
                 ws.Cell(satir, 1).Value = z.Malzeme?.Ad ?? "—";
-                ws.Cell(satir, 2).Value = z.Personel?.AdSoyad ?? "—";
-                ws.Cell(satir, 3).Value = z.ZimmetTarihi.ToLocalTime().ToString("dd.MM.yyyy");
-                ws.Cell(satir, 4).Value = z.IadeTarihi?.ToLocalTime().ToString("dd.MM.yyyy") ?? "—";
-                ws.Cell(satir, 5).Value = z.Durum;
-                ws.Cell(satir, 6).Value = z.Notlar ?? "—";
+                ws.Cell(satir, 2).Value = z.ZimmetMiktari;
+                ws.Cell(satir, 3).Value = z.Personel?.AdSoyad ?? "—";
+                ws.Cell(satir, 4).Value = z.ZimmetTarihi.ToLocalTime().ToString("dd.MM.yyyy");
+                ws.Cell(satir, 5).Value = z.IadeTarihi?.ToLocalTime().ToString("dd.MM.yyyy") ?? "—";
+                ws.Cell(satir, 6).Value = z.Durum;
+                ws.Cell(satir, 7).Value = z.Notlar ?? "—";
                 if (satir % 2 == 0)
                     ws.Row(satir).Style.Fill.BackgroundColor = ClosedXML.Excel.XLColor.FromHtml("#f8faff");
                 satir++;
@@ -268,6 +270,7 @@ namespace ArıtmaEnvanter.Controllers
                             PersonelId = personel.Id,
                             Durum = "Aktif",
                             ZimmetTarihi = teslimTarihi,
+                            ZimmetMiktari = 1,
                             Notlar = valDurumu
                         };
                         _db.Zimmetler.Add(newZimmet);

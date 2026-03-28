@@ -21,7 +21,7 @@
                     <div class="search-box" style="width:100%;">
                         <i class="bi bi-search"></i>
                         <input type="text" name="arama" value="@ViewBag.Arama"
-                            placeholder="Ürün adı, form no, kullanıcı veya personel..." />
+ />
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -83,7 +83,7 @@
                         <th>Tarih</th>
                         <th>Depo & Raf Bilgisi</th>
                         <th>Ürün Adı</th>
-                        <th>Adet</th>
+                        <th>Miktar</th>
                         <th>Teslim Alan</th>
                         <th>İşlem Yapan / Kullanıcı</th>
                         <th>İşlem Türü</th>
@@ -167,8 +167,10 @@
                                 {
                                     <div class="text-muted">Nereye: <strong>@(hareket.HedefDepo?.Ad ?? "Bilinmiyor")</strong></div>
                                 }
-                                @if (!string.IsNullOrEmpty(hareket.RafNo))
-
+                                @{
+                                    bool isKimyasal = hareket.RafTanim != null && (hareket.RafTanim.Ad.ToUpper().Contains("KİMYASAL") || hareket.RafTanim.Ad.ToUpper().Contains("KIMYASAL"));
+                                }
+                                @if (!string.IsNullOrEmpty(hareket.RafNo) && !isKimyasal)
                                 {
                                     <small class="text-secondary d-block">Raf: @hareket.RafNo</small>
                                 }
@@ -178,7 +180,7 @@
                             </td>
                             <td>
                                 <span style="font-size:15px; font-weight:800; color:var(--@islemRenk);">
-                                    @(islemTuru == "Çıkış" ? "-" : "+")@hareket.Miktar
+                                    @hareket.Miktar.ToString("0.##") @(isKimyasal ? "KG" : (hareket.Malzeme?.Birim?.Ad ?? "Adet"))
                                 </span>
                             </td>
                             <td>
