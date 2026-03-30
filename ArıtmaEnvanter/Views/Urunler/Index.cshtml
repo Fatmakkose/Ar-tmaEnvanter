@@ -82,7 +82,7 @@ else
 
     foreach (var group in groupedStoklar)
     {
-        var rafAdi = group.Key?.Ad ?? "Genel Alan / Tanımsız Raf";
+        var rafAdi = group.Key?.Ad ?? "GES DEPO";
         bool isKimyasal = rafAdi.ToUpper().Contains("KİMYASAL") || rafAdi.ToUpper().Contains("KIMYASAL");
 
         <div class="data-card mb-4" style="border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">

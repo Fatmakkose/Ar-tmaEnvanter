@@ -190,7 +190,7 @@ namespace ArıtmaEnvanter.Controllers
                     var birim = units.FirstOrDefault(b => NormalizeAd(b.Ad) == nDaire);
                     if (birim == null && !string.IsNullOrWhiteSpace(valDaire))
                     {
-                        var targetParent = units.FirstOrDefault(u => u.Ad.Contains("BAŞKANLI")); // Try to find a sensible parent
+                        var targetParent = units.FirstOrDefault(u => u.Ad.Contains("BAŞKANLI")); 
                         birim = new Birim { Ad = valDaire, UstBirimId = targetParent?.Id };
                         _db.Birimler.Add(birim);
                         await _db.SaveChangesAsync();

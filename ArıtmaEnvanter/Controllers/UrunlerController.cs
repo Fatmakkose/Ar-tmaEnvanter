@@ -153,13 +153,12 @@ namespace ArıtmaEnvanter.Controllers
             string kullaniciAdSoyad = await GetKullaniciAdSoyad();
 
 
-            // RafTanim bilgisini kontrol et
             var rafTanim = rafTanimId.HasValue ? await _db.RafTanimlar.FindAsync(rafTanimId.Value) : null;
             bool isKimyasalRaf = rafTanim != null && (rafTanim.Ad.ToUpper().Contains("KİMYASAL") || rafTanim.Ad.ToUpper().Contains("KIMYASAL"));
 
             DepoStok? stok = null;
             
-            // Eğer kimyasal rafı DEĞİLSE, mevcut kaydı bulup üstüne eklemeye çalış (üst üste binmemesi için)
+        
             if (!isKimyasalRaf)
             {
                 stok = await _db.DepoStoklar
@@ -476,7 +475,7 @@ namespace ArıtmaEnvanter.Controllers
                 if (stok == null || stok.Miktar < item.Miktar) continue;
 
                 bool isKimyasal = stok.RafTanim != null && (stok.RafTanim.Ad.ToUpper().Contains("KİMYASAL") || stok.RafTanim.Ad.ToUpper().Contains("KIMYASAL"));
-                if (isKimyasal && item.Miktar % 25 != 0) continue; // Skip invalid chemical amounts in bulk exit
+                if (isKimyasal && item.Miktar % 25 != 0) continue; 
 
                 stok.Miktar -= item.Miktar;
                 stok.IslemYapanKisi = await GetKullaniciAdSoyad();
@@ -672,7 +671,7 @@ namespace ArıtmaEnvanter.Controllers
             var cikisHareketleri = await _db.DepoHareketler
               .Include(h => h.Malzeme)
               .Include(h => h.RafTanim)
-              .Where(h => h.CikisFormNo == formNo.Trim() && h.HedefDepoId == null) // Çıkış işlemleri
+              .Where(h => h.CikisFormNo == formNo.Trim() && h.HedefDepoId == null) 
                       .Select(h => new
                       {
                           h.Id,

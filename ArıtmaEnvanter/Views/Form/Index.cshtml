@@ -272,7 +272,7 @@
             border-top-color: #0d9488 !important;
         }
 
-        /* --- Toplu Silme Modu Stilleri --- */
+      
         #bulkControls, .sablon-check-wrapper {
             display: none !important;
         }
@@ -467,7 +467,7 @@
                 });
         }
 
-        // --- Toplu Silme İşlemleri ---
+        
         const toggleBulkModeBtn = document.getElementById('toggleBulkMode');
         const selectAll = document.getElementById('selectAll');
         const checks = document.querySelectorAll('.sablon-check');
@@ -485,7 +485,6 @@
                     this.innerHTML = '<i class="bi bi-check2-square me-1"></i> Toplu İşlemler';
                     this.classList.replace('btn-secondary', 'btn-outline-secondary');
                     
-                    // Reset all selections
                     if (selectAll) selectAll.checked = false;
                     checks.forEach(c => {
                         c.checked = false;
@@ -552,11 +551,11 @@
             const checkedCount = Array.from(checks).filter(c => c.checked).length;
             if (checkedCount === 0) return false;
 
-            // Mevcut form içindeki eski inputları temizle
+           
             const oldInputs = bulkDeleteForm.querySelectorAll('input[name="ids"]');
             oldInputs.forEach(input => input.remove());
 
-            // Seçilen ID'leri input olarak ekle
+          
             checks.forEach(c => {
                 if (c.checked) {
                     const input = document.createElement('input');

@@ -6,10 +6,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace ArıtmaEnvanter.Migrations
 {
-    /// <inheritdoc />
+    
     public partial class InitialMigration : Migration
     {
-        /// <inheritdoc />
+       
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -1016,7 +1016,7 @@ namespace ArıtmaEnvanter.Migrations
                 column: "UrunId");
         }
 
-        /// <inheritdoc />
+        
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
