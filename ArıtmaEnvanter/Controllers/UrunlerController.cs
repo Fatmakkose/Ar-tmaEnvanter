@@ -133,7 +133,7 @@ namespace ArıtmaEnvanter.Controllers
 
             string kullaniciAdSoyad = await GetKullaniciAdSoyad();
 
-          
+
             FormKayit? yeniFormKayit = null;
             if (malzeme.FormSablonId.HasValue)
             {
@@ -163,11 +163,11 @@ namespace ArıtmaEnvanter.Controllers
                 }
                 _db.FormKayitlar.Add(yeniFormKayit);
 
-               
+
                 await _db.SaveChangesAsync();
             }
 
-          
+
             var hareket = new DepoHareket
             {
                 MalzemeId = malzemeId,
@@ -179,16 +179,16 @@ namespace ArıtmaEnvanter.Controllers
                 Tarih = DateTime.UtcNow,
                 IslemYapanKisi = kullaniciAdSoyad,
                 FirmaId = firmaId,
-                
+
                 FormKayitId = yeniFormKayit?.Id
             };
             _db.DepoHareketler.Add(hareket);
 
-           
+
             var rafTanim = rafTanimId.HasValue ? await _db.RafTanimlar.FindAsync(rafTanimId.Value) : null;
             bool isKimyasalRaf = rafTanim != null && (rafTanim.Ad.ToUpper().Contains("KİMYASAL") || rafTanim.Ad.ToUpper().Contains("KIMYASAL"));
 
-            
+
             string ekOzellikler = "";
             if (yeniFormKayit != null && yeniFormKayit.Degerler.Any())
             {
@@ -239,7 +239,7 @@ namespace ArıtmaEnvanter.Controllers
                 _db.DepoStoklar.Update(stok);
             }
 
-            
+
             if (isKimyasalRaf)
             {
                 string firmaAdi = "";
@@ -461,7 +461,7 @@ namespace ArıtmaEnvanter.Controllers
                 if (stok == null || stok.Miktar < item.Miktar) continue;
 
                 bool isKimyasal = stok.RafTanim != null && (stok.RafTanim.Ad.ToUpper().Contains("KİMYASAL") || stok.RafTanim.Ad.ToUpper().Contains("KIMYASAL"));
-                if (isKimyasal && item.Miktar % 25 != 0) continue; 
+                if (isKimyasal && item.Miktar % 25 != 0) continue;
 
                 stok.Miktar -= item.Miktar;
                 stok.IslemYapanKisi = await GetKullaniciAdSoyad();
@@ -657,7 +657,7 @@ namespace ArıtmaEnvanter.Controllers
             var cikisHareketleri = await _db.DepoHareketler
               .Include(h => h.Malzeme)
               .Include(h => h.RafTanim)
-              .Where(h => h.CikisFormNo == formNo.Trim() && h.HedefDepoId == null) 
+              .Where(h => h.CikisFormNo == formNo.Trim() && h.HedefDepoId == null)
                       .Select(h => new
                       {
                           h.Id,

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ArıtmaEnvanter.Models.Entities
 {
@@ -29,7 +30,11 @@ namespace ArıtmaEnvanter.Models.Entities
         public string? IslemYapanKisi { get; set; }
 
         public DateTime GuncellemeTarihi { get; set; } = DateTime.UtcNow;
+        public int? FormKayitId { get; set; }
 
-      
+        [ForeignKey("FormKayitId")]
+        public virtual FormKayit? FormKayit { get; set; }
+
+
     }
 }

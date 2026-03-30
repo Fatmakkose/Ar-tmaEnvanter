@@ -40,7 +40,7 @@ namespace ArıtmaEnvanter.Models.Entities
 
         public int? FormSablonId { get; set; }
         public FormSablon? FormSablon { get; set; }
-
+        
     }
 }
 

@@ -228,7 +228,7 @@ namespace ArıtmaEnvanter.Controllers
         }
         public async Task<IActionResult> PoliTuketimRaporu(int yil = 2026)
         {
-           
+
             var girisler = await _db.KimyasalGirisler
                 .Where(g => g.Tarih.Year == yil)
                 .ToListAsync();
@@ -236,7 +236,7 @@ namespace ArıtmaEnvanter.Controllers
             var viewModel = new PoliCizelgeViewModel
             {
                 Yil = yil,
-                Girisler = girisler 
+                Girisler = girisler
             };
 
             return View(viewModel);
