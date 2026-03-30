@@ -131,48 +131,85 @@ namespace ArıtmaEnvanter.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            string ekOzellikler = "";
+            string kullaniciAdSoyad = await GetKullaniciAdSoyad();
+
+          
+            FormKayit? yeniFormKayit = null;
             if (malzeme.FormSablonId.HasValue)
             {
-                var alanlar = await _db.FormAlanlar.Where(a => a.FormSablonId == malzeme.FormSablonId.Value).OrderBy(a => a.Sira).ToListAsync();
-                var ozellikListesi = new List<string>();
+                var formSablonId = malzeme.FormSablonId.Value;
+                var alanlar = await _db.FormAlanlar.Where(a => a.FormSablonId == formSablonId).ToListAsync();
+
+                yeniFormKayit = new FormKayit
+                {
+                    FormSablonId = formSablonId,
+                    DepoId = gercekDepoId,
+                    BirimId = gercekDepoId,
+                    OlusturmaTarihi = DateTime.UtcNow,
+                    KaydedenKullanici = User.Identity?.Name,
+                    Degerler = new List<FormKayitDeger>()
+                };
+
                 foreach (var alan in alanlar)
                 {
                     if (form.TryGetValue($"DynamicField_{alan.Id}", out var deger) && !string.IsNullOrEmpty(deger.ToString()))
                     {
-                        ozellikListesi.Add(deger.ToString());
+                        yeniFormKayit.Degerler.Add(new FormKayitDeger
+                        {
+                            FormAlanId = alan.Id,
+                            Deger = deger.ToString()
+                        });
                     }
                 }
-                if (ozellikListesi.Any())
-                {
-                    ekOzellikler = " " + string.Join(" ", ozellikListesi);
-                }
+                _db.FormKayitlar.Add(yeniFormKayit);
+
+               
+                await _db.SaveChangesAsync();
             }
 
-            string temizUrunAdi = (malzeme.Ad + ekOzellikler).Trim();
-            string kullaniciAdSoyad = await GetKullaniciAdSoyad();
+          
+            var hareket = new DepoHareket
+            {
+                MalzemeId = malzemeId,
+                HedefDepoId = gercekDepoId,
+                KaynakDepoId = gercekDepoId,
+                RafTanimId = rafTanimId,
+                RafNo = rafNo,
+                Miktar = miktar,
+                Tarih = DateTime.UtcNow,
+                IslemYapanKisi = kullaniciAdSoyad,
+                FirmaId = firmaId,
+                
+                FormKayitId = yeniFormKayit?.Id
+            };
+            _db.DepoHareketler.Add(hareket);
 
-
+           
             var rafTanim = rafTanimId.HasValue ? await _db.RafTanimlar.FindAsync(rafTanimId.Value) : null;
             bool isKimyasalRaf = rafTanim != null && (rafTanim.Ad.ToUpper().Contains("KİMYASAL") || rafTanim.Ad.ToUpper().Contains("KIMYASAL"));
 
-            DepoStok? stok = null;
             
-        
+            string ekOzellikler = "";
+            if (yeniFormKayit != null && yeniFormKayit.Degerler.Any())
+            {
+                ekOzellikler = " " + string.Join(" ", yeniFormKayit.Degerler.Select(d => d.Deger));
+            }
+            string temizUrunAdi = (malzeme.Ad + ekOzellikler).Trim();
+
+            DepoStok? stok = null;
             if (!isKimyasalRaf)
             {
                 stok = await _db.DepoStoklar
                     .FirstOrDefaultAsync(s => s.MalzemeId == malzemeId
-                                            && s.DepoId == gercekDepoId
-                                            && s.RafTanimId == rafTanimId
-                                            && (s.RafNo == null ? rafNo == null : s.RafNo.Trim() == (rafNo ?? "").Trim())
-                                            && s.UrunAdi.Trim() == temizUrunAdi
-                                            && s.Birim == birim);
+                                        && s.DepoId == gercekDepoId
+                                        && s.RafTanimId == rafTanimId
+                                        && (s.RafNo == null ? rafNo == null : s.RafNo.Trim() == (rafNo ?? "").Trim())
+                                        && s.UrunAdi.Trim() == temizUrunAdi
+                                        && s.Birim == birim);
             }
 
             if (stok == null)
             {
-
                 stok = new DepoStok
                 {
                     MalzemeId = malzemeId,
@@ -191,11 +228,9 @@ namespace ArıtmaEnvanter.Controllers
             }
             else
             {
-
                 stok.Miktar += miktar;
                 stok.IslemYapanKisi = kullaniciAdSoyad;
                 stok.GuncellemeTarihi = DateTime.UtcNow;
-
                 if (bidonSayisi.HasValue)
                 {
                     stok.BidonSayisi = (stok.BidonSayisi ?? 0) + bidonSayisi.Value;
@@ -204,72 +239,23 @@ namespace ArıtmaEnvanter.Controllers
                 _db.DepoStoklar.Update(stok);
             }
 
-
-            var hareket = new DepoHareket
+            
+            if (isKimyasalRaf)
             {
-                MalzemeId = malzemeId,
-                HedefDepoId = gercekDepoId,
-                KaynakDepoId = gercekDepoId,
-                RafTanimId = rafTanimId,
-                RafNo = rafNo,
-                Miktar = miktar,
-                Tarih = DateTime.UtcNow,
-                IslemYapanKisi = kullaniciAdSoyad,
-                FirmaId = firmaId
-            };
-            _db.DepoHareketler.Add(hareket);
-
-           
-            if (rafTanimId.HasValue)
-            {
-                var raf = await _db.RafTanimlar.FindAsync(rafTanimId.Value);
-                if (raf != null && raf.Ad != null && raf.Ad.Trim().ToUpper() == "KİMYASAL")
+                string firmaAdi = "";
+                if (firmaId.HasValue)
                 {
-                    string firmaAdi = "";
-                    if (firmaId.HasValue)
-                    {
-                        var firma = await _db.Firmalar.FindAsync(firmaId.Value);
-                        firmaAdi = firma?.FirmaAdi ?? "";
-                    }
-
-                    var kimyasalGiris = new KimyasalGiris
-                    {
-                        Tarih = DateTime.UtcNow,
-                        Adet = bidonSayisi ?? 0,
-                        Kg = (bidonSayisi ?? 0) * 25m,
-                        Aciklama = firmaAdi
-                    };
-                    _db.KimyasalGirisler.Add(kimyasalGiris);
+                    var firma = await _db.Firmalar.FindAsync(firmaId.Value);
+                    firmaAdi = firma?.FirmaAdi ?? "";
                 }
-            }
-
-
-            if (malzeme.FormSablonId.HasValue)
-            {
-                var formSablonId = malzeme.FormSablonId.Value;
-                var alanlar = await _db.FormAlanlar.Where(a => a.FormSablonId == formSablonId).ToListAsync();
-                var formKayit = new FormKayit
+                var kimyasalGiris = new KimyasalGiris
                 {
-                    FormSablonId = formSablonId,
-                    DepoId = gercekDepoId,
-                    BirimId = gercekDepoId,
-                    OlusturmaTarihi = DateTime.UtcNow,
-                    KaydedenKullanici = User.Identity?.Name,
-                    Degerler = new List<FormKayitDeger>()
+                    Tarih = DateTime.UtcNow,
+                    Adet = bidonSayisi ?? 0,
+                    Kg = (bidonSayisi ?? 0) * 25m,
+                    Aciklama = firmaAdi
                 };
-
-                foreach (var alan in alanlar)
-                {
-                    if (form.TryGetValue($"DynamicField_{alan.Id}", out var deger))
-                    {
-                        formKayit.Degerler.Add(new FormKayitDeger
-                        {
-                            FormAlanId = alan.Id,
-                            Deger = deger.ToString()
-                        });
-                    }
-                }
-                _db.FormKayitlar.Add(formKayit);
+                _db.KimyasalGirisler.Add(kimyasalGiris);
             }
 
             await _db.SaveChangesAsync();

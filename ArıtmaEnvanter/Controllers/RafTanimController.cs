@@ -226,5 +226,20 @@ namespace ArıtmaEnvanter.Controllers
             await _db.SaveChangesAsync();
             return Json(new { success = true });
         }
+        public async Task<IActionResult> PoliTuketimRaporu(int yil = 2026)
+        {
+           
+            var girisler = await _db.KimyasalGirisler
+                .Where(g => g.Tarih.Year == yil)
+                .ToListAsync();
+
+            var viewModel = new PoliCizelgeViewModel
+            {
+                Yil = yil,
+                Girisler = girisler 
+            };
+
+            return View(viewModel);
+        }
     }
 }

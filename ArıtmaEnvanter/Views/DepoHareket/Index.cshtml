@@ -176,7 +176,19 @@
                                 }
                             </td>
                             <td style="font-weight:600; color:var(--primary);">
-                                @(hareket.Malzeme?.Ad ?? "Bilinmeyen Ürün")
+                                <div>@(hareket.Malzeme?.Ad ?? "Bilinmeyen Ürün")</div>
+
+                                @if (hareket.FormKayit != null && hareket.FormKayit.Degerler != null && hareket.FormKayit.Degerler.Any())
+                                {
+                                    <div class="text-secondary" style="font-weight:400; font-size: 11px; margin-top: 4px; line-height: 1.4;">
+                                        @foreach (var deger in hareket.FormKayit.Degerler)
+                                        {
+                                            <span class="badge bg-light text-dark border-0 me-1" style="font-size: 10px;">
+                                                <i class="bi bi-tag me-1 text-info"></i>@deger.Deger
+                                            </span>
+                                        }
+                                    </div>
+                                }
                             </td>
                             <td>
                                 <span style="font-size:15px; font-weight:800; color:var(--@islemRenk);">

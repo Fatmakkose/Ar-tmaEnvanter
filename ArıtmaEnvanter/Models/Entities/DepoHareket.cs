@@ -39,6 +39,10 @@ namespace ArıtmaEnvanter.Models.Entities
         public int? PersonelId { get; set; }
         [ForeignKey("PersonelId")]
         public virtual Personel? Personel { get; set; }
+        public int? FormKayitId { get; set; }
+
+        [ForeignKey("FormKayitId")]
+        public virtual FormKayit? FormKayit { get; set; }
 
     }
 }

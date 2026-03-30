@@ -26,6 +26,8 @@ namespace ArıtmaEnvanter.Controllers
 
             var query = _db.DepoHareketler
                 .Include(h => h.Malzeme)
+                .Include(h => h.FormKayit)
+                .ThenInclude(f => f.Degerler)
                 .Include(h => h.KaynakDepo)
                 .Include(h => h.HedefDepo)
                 .Include(h => h.RafTanim)
