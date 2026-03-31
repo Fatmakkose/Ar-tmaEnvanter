@@ -49,11 +49,11 @@
 
         .b-card.active-card {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-left-color: #673ab7;
+                border-left-color: #003d;
         }
 
         .form-header-card {
-            border-top: 10px solid #673ab7;
+            border-top: 10px solid #003d;
             border-left: none !important;
         }
 
@@ -68,7 +68,7 @@
         }
 
         .h-input:focus {
-            border-bottom: 2px solid #673ab7;
+                border-bottom: 2px solid #003d;
         }
 
         .form-title-input {
@@ -99,7 +99,7 @@
             font-weight: 500;
             background: #f8f9fa;
             border: none;
-            border-bottom: 2px solid #673ab7;
+            border-bottom: 2px solid #003d;
             border-radius: 4px 4px 0 0;
             padding: 10px 12px;
             font-family: 'Nunito', sans-serif;
@@ -157,7 +157,7 @@
         }
 
         .option-input:focus {
-            border-bottom: 2px solid #673ab7;
+                border-bottom: 2px solid #003d;
         }
 
         .remove-opt-btn {
@@ -179,7 +179,7 @@
         }
 
         .add-option-btn {
-            color: #673ab7;
+            color: #003d;
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
@@ -232,11 +232,11 @@
 
         .fab-btn:hover {
             background: #f1f3f4;
-            color: #673ab7;
+                color: #003d;
         }
 
         .form-check-input {
-            accent-color: #673ab7;
+            accent-color: #003d;
         }
 
         @@keyframes fadeIn {
@@ -312,8 +312,8 @@
     <div class="save-bar">
         <div class="container d-flex justify-content-between align-items-center">
             <div style="display:flex;align-items:center;gap:12px;">
-                <img src="/images/maskilogo.png" style="height:36px;filter:brightness(0);" alt="MaSKİ">
-                <span style="font-weight:700;color:#003d7a;font-size:15px;">Varlıklar</span>
+                <img src="/images/maskilogo.png" style="height:50px;filter:brightness(0);" alt="MaSKİ">
+                <span style="font-weight:700;color:#003d7a;font-size:15px;:20px;">ÜRÜN TANIMLARI</span>
             </div>
             <div style="display:flex;gap:10px;">
                 <a href="/Form/Index"
@@ -321,8 +321,8 @@
                     İptal
                 </a>
                 <button type="button" id="saveBtn"
-                    style="padding:8px 20px;border-radius:8px;background:#003d7a;color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;">
-                    <i class="bi bi-check2"></i> Şablonu Kaydet
+                    style="padding:8px 20px;border-radius:8px;background:#003d;color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;">
+                    <i class="bi bi-check2"></i> MALZEMEYİ KAYDET
                 </button>
             </div>
         </div>
@@ -330,9 +330,9 @@
 
     <div class="builder-container">
         <div class="b-card form-header-card active-card" id="formHeader">
-            <input type="text" class="h-input form-title-input" id="formName" placeholder="Ürün Grubu / Şablon Adı"
+            <input type="text" class="h-input form-title-input" id="formName" placeholder="Ana Malzeme"
                 value="@Model.Name">
-            <textarea class="h-input form-desc-input mt-2" id="formDesc" placeholder="Şablon açıklaması (isteğe bağlı)"
+            <textarea class="h-input form-desc-input mt-2" id="formDesc" placeholder="Açıklama (İsteğe Bağlı)"
                 rows="1">@Model.Description</textarea>
 
         </div>

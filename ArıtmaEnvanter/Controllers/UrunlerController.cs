@@ -222,7 +222,8 @@ namespace ArıtmaEnvanter.Controllers
                     IslemYapanKisi = kullaniciAdSoyad,
                     GuncellemeTarihi = DateTime.UtcNow,
                     BidonSayisi = bidonSayisi ?? 0,
-                    BidonKg = (bidonSayisi ?? 0) * 25m
+                    BidonKg = (bidonSayisi ?? 0) * 25m,
+                    FormKayitId = yeniFormKayit?.Id
                 };
                 _db.DepoStoklar.Add(stok);
             }
@@ -235,7 +236,9 @@ namespace ArıtmaEnvanter.Controllers
                 {
                     stok.BidonSayisi = (stok.BidonSayisi ?? 0) + bidonSayisi.Value;
                     stok.BidonKg = (stok.BidonSayisi ?? 0) * 25m;
+
                 }
+                stok.FormKayitId = yeniFormKayit?.Id;
                 _db.DepoStoklar.Update(stok);
             }
 
