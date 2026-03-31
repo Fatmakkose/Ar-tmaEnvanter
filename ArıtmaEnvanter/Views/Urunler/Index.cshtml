@@ -236,7 +236,7 @@ else
                                                             </select>
                                                         </div>
                                                         <div class="mb-3">
-                                                            <label class="form-label">Teslim Edilen Personel (Demirbaş için)</label>
+                                                            <label class="form-label">Teslim Edilen Personel</label>
                                                             <select name="personelId" class="form-select">
                                                                 <option value="">-- Personel Seçin --</option>
                                                                 @if (ViewBag.Personeller != null)
@@ -997,12 +997,12 @@ else
                      </div>`;
                  document.getElementById('gizliGirdilerMekani').insertAdjacentHTML('beforeend', gizliHtml);
 
-                 if (tur === 'Demirbaş') {
-                     document.getElementById('genelPersonelDiv').style.display = 'block';
-                     document.getElementById('genelPersonelSelect').required = true;
-                 }
+                if (tur === 'Demirbaş' || 'Tuketim') {
+                    document.getElementById('genelPersonelDiv').style.display = 'block';
+                    document.getElementById('genelPersonelSelect').required = true;
+                }
 
-                 // Sıfırla
+              
                  cikisStokSelect.value = '';
                  cikisMiktarInput.value = '';
                  cikisMiktarInput.disabled = true;

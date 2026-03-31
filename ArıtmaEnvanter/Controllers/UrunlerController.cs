@@ -384,6 +384,12 @@ namespace ArıtmaEnvanter.Controllers
 
 
             stok.Miktar -= miktar;
+            if (isKimyasal)
+            {
+                int cikilanBidon = (int)(miktar / 25m);
+                stok.BidonSayisi = (stok.BidonSayisi ?? 0) - cikilanBidon;
+                stok.BidonKg = (stok.BidonSayisi ?? 0) * 25m;
+            }
             stok.IslemYapanKisi = await GetKullaniciAdSoyad();
             stok.GuncellemeTarihi = DateTime.UtcNow;
             _db.DepoStoklar.Update(stok);
@@ -400,7 +406,8 @@ namespace ArıtmaEnvanter.Controllers
                 Tarih = DateTime.UtcNow,
                 CikisFormNo = cikisFormNo,
                 IslemYapanKisi = await GetKullaniciAdSoyad(),
-                PersonelId = personelId
+                PersonelId = personelId,
+                FormKayitId = stok.FormKayitId
             };
             _db.DepoHareketler.Add(hareket);
 
@@ -464,6 +471,12 @@ namespace ArıtmaEnvanter.Controllers
                 if (isKimyasal && item.Miktar % 25 != 0) continue;
 
                 stok.Miktar -= item.Miktar;
+                if (isKimyasal)
+                {
+                    int cikilanBidon = (int)(item.Miktar / 25m);
+                    stok.BidonSayisi = (stok.BidonSayisi ?? 0) - cikilanBidon;
+                    stok.BidonKg = (stok.BidonSayisi ?? 0) * 25m;
+                }
                 stok.IslemYapanKisi = await GetKullaniciAdSoyad();
                 stok.GuncellemeTarihi = DateTime.UtcNow;
                 _db.DepoStoklar.Update(stok);
@@ -479,7 +492,8 @@ namespace ArıtmaEnvanter.Controllers
                     Tarih = DateTime.UtcNow,
                     CikisFormNo = cikisFormNo,
                     IslemYapanKisi = await GetKullaniciAdSoyad(),
-                    PersonelId = personelId
+                    PersonelId = personelId,
+                    FormKayitId = stok.FormKayitId
                 };
                 _db.DepoHareketler.Add(hareket);
 
