@@ -26,9 +26,15 @@
             </div>
             
             <div>
-                <strong class="@(level == 0 ? "text-primary fs-5" : "text-dark fs-6")" style="font-weight: 600;">
-                    @currentNode.Ad
-                </strong>
+                <a asp-controller="Urunler"
+                   asp-action="Index"
+                   asp-route-depoId="@currentNode.Id"
+                   class="depo-name-link"
+                   style="text-decoration: none; display: block;">
+                    <strong class="@(level == 0 ? "text-primary fs-5" : "text-dark fs-6")" style="font-weight: 600; cursor: pointer;">
+                        @currentNode.Ad
+                    </strong>
+                </a>
                 @if (currentNode.Birim != null)
                 {
                     <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">

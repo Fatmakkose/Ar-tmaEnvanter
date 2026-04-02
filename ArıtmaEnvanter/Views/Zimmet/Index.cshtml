@@ -30,13 +30,13 @@
         </a>
     </div>
 </div>
-<div class="search-panel p-3 mb-4" style="background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+<div class="search-panel p-3 mb-4" style="background: white; border-radius: 8px; box-shadow: 0 4px 12px #003d;">
     <form method="get" action="@Url.Action("Index", "Zimmet")">
         <div class="d-flex w-100" style="gap: 5px; height: 76px;">
           
             <div class="d-flex flex-column flex-grow-1" style="flex-basis: 22%;">
-                <div class="d-flex align-items-center justify-content-center" style="background-color: black; color: white; font-weight: bold; font-size: 13px; height: 38px;">ADI SOYADI</div>
-                <input list="adSoyadList" type="text" name="adSoyad" value="@ViewBag.AdSoyad" class="form-control rounded-0 px-2" style="background-color: #f8fafc; border: 1px solid #e2e8f0; height: 38px; font-weight: 500; font-size: 14px;" autocomplete="off" />
+                <div class="d-flex align-items-center justify-content-center" style="background-color:#003d; color: white; font-weight: bold; font-size: 13px; height: 38px;">ADI SOYADI</div>
+                <input list="adSoyadList" type="text" name="adSoyad" value="@ViewBag.AdSoyad" class="form-control rounded-0 px-2" style="background-color: #f8fafc; border: 1px solid #003d; height: 38px; font-weight: 500; font-size: 14px;" autocomplete="off" />
                 <datalist id="adSoyadList">
                     @if(ViewBag.PersonelAdlari != null) {
                         foreach(var isim in ViewBag.PersonelAdlari) {
@@ -48,8 +48,8 @@
             
           
             <div class="d-flex flex-column flex-grow-1" style="flex-basis: 22%;">
-                <div class="d-flex align-items-center justify-content-center" style="background-color: black; color: white; font-weight: bold; font-size: 13px; height: 38px;">KADRO TÜRÜ</div>
-                <input list="kadroTuruList" type="text" name="kadroTuru" value="@ViewBag.KadroTuru" class="form-control rounded-0 px-2" style="background-color: #f8fafc; border: 1px solid #e2e8f0; height: 38px; font-weight: 500; font-size: 14px;" autocomplete="off" />
+                <div class="d-flex align-items-center justify-content-center" style="background-color: #003d; color: white; font-weight: bold; font-size: 13px; height: 38px;">KADRO TÜRÜ</div>
+                <input list="kadroTuruList" type="text" name="kadroTuru" value="@ViewBag.KadroTuru" class="form-control rounded-0 px-2" style="background-color: #f8fafc; border: 1px solid #003d; height: 38px; font-weight: 500; font-size: 14px;" autocomplete="off" />
                 <datalist id="kadroTuruList">
                     <option value="İHALE PERSONELİ"></option>
                     <option value="İŞKUR (TYP)"></option>
@@ -61,8 +61,8 @@
 
            
             <div class="d-flex flex-column flex-grow-1" style="flex-basis: 22%;">
-                <div class="d-flex align-items-center justify-content-center" style="background-color: black; color: white; font-weight: bold; font-size: 13px; height: 38px;">ÜNVANI</div>
-                <input list="unvanList" type="text" name="unvan" value="@ViewBag.Unvan" class="form-control rounded-0 px-2" style="background-color: #f8fafc; border: 1px solid #e2e8f0; height: 38px; font-weight: 500; font-size: 14px;" autocomplete="off" />
+                <div class="d-flex align-items-center justify-content-center" style="background-color:#003d; color: white; font-weight: bold; font-size: 13px; height: 38px;">ÜNVANI</div>
+                <input list="unvanList" type="text" name="unvan" value="@ViewBag.Unvan" class="form-control rounded-0 px-2" style="background-color: #f8fafc; border: 1px solid #003d; height: 38px; font-weight: 500; font-size: 14px;" autocomplete="off" />
                 <datalist id="unvanList">
                     <option value="AĞIR VASITA ŞOFÖRÜ"></option>
                     <option value="ARITMA İŞÇİSİ"></option>
@@ -84,8 +84,8 @@
 
            
             <div class="d-flex flex-column flex-grow-1" style="flex-basis: 22%;">
-                <div class="d-flex align-items-center justify-content-center" style="background-color: black; color: white; font-weight: bold; font-size: 13px; height: 38px;">MALZEMENİN ADI</div>
-                <input list="malzemeList" type="text" name="malzemeAdi" value="@ViewBag.MalzemeAdi" class="form-control rounded-0 px-2" style="background-color: #f8fafc; border: 1px solid #e2e8f0; height: 38px; font-weight: 500; font-size: 14px;" autocomplete="off" />
+                <div class="d-flex align-items-center justify-content-center" style="background-color: #003d; color: white; font-weight: bold; font-size: 13px; height: 38px;">MALZEMENİN ADI</div>
+                <input list="malzemeList" type="text" name="malzemeAdi" value="@ViewBag.MalzemeAdi" class="form-control rounded-0 px-2" style="background-color: #f8fafc; border: 1px solid #003d; height: 38px; font-weight: 500; font-size: 14px;" autocomplete="off" />
                 <datalist id="malzemeList">
                     @if(ViewBag.MalzemeAdlari != null) {
                         foreach(var malz in ViewBag.MalzemeAdlari) {
@@ -115,7 +115,7 @@
                 <div class="modal-body">
                     <div class="alert alert-info" style="font-size:13px;">
                         <i class="bi bi-info-circle-fill me-2"></i>
-                        Lütfen verileri <b>PERSONEL BAZLI ZİMMET DOSYASI</b> formatına (Adı Soyadı, Kadro Türü, Ünvanı, Malzemenin Adı, Teslim Tarihi, Bulunduğu Bölüm) uygun şekilde hazırlayın. Kayıtların 6. satırdan başladığından emin olun.
+                        Lütfen verileri (Adı Soyadı, Kadro Türü, Ünvanı, Malzemenin Adı, Teslim Tarihi, Bulunduğu Bölüm) formatına uygun şekilde hazırlayın.
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-600">Özel Excel Dosyası Seçin</label>
