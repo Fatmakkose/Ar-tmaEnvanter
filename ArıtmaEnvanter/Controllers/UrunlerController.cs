@@ -398,6 +398,7 @@ namespace ArıtmaEnvanter.Controllers
             _db.DepoStoklar.Update(stok);
 
 
+          
             var hareket = new DepoHareket
             {
                 MalzemeId = stok.MalzemeId,
@@ -412,7 +413,6 @@ namespace ArıtmaEnvanter.Controllers
                 PersonelId = personelId,
                 FormKayitId = stok.FormKayitId
             };
-            _db.DepoHareketler.Add(hareket);
 
 
             if (cikisTuru == "Demirbaş" && personelId.HasValue)
@@ -719,7 +719,7 @@ namespace ArıtmaEnvanter.Controllers
 
                 var cikisHareket = await _db.DepoHareketler
                   .Include(h => h.Malzeme)
-                  .FirstOrDefaultAsync(h => h.Id == item.HareketId && h.CikisFormNo == cikisFormNo);
+                  .FirstOrDefaultAsync(h => h.Id == item.HareketId && h.CikisFormNo.Trim() == cikisFormNo.Trim());
 
                 if (cikisHareket == null || item.IadeMiktari > cikisHareket.Miktar) continue;
 
@@ -731,6 +731,7 @@ namespace ArıtmaEnvanter.Controllers
                 var stok = await _db.DepoStoklar
                   .FirstOrDefaultAsync(s => s.MalzemeId == cikisHareket.MalzemeId
                             && s.DepoId == cikisHareket.KaynakDepoId.Value
+                            && s.FormKayitId == cikisHareket.FormKayitId
                             && s.RafTanimId == hedefRafId
                             && (s.RafNo == null ? hedefRafNo == null : s.RafNo.Trim() == (hedefRafNo ?? "").Trim()));
 
@@ -740,6 +741,7 @@ namespace ArıtmaEnvanter.Controllers
                     {
                         MalzemeId = cikisHareket.MalzemeId,
                         DepoId = cikisHareket.KaynakDepoId.Value,
+                        FormKayitId = cikisHareket.FormKayitId,
                         RafTanimId = hedefRafId,
                         RafNo = (hedefRafNo ?? "").Trim(),
                         Miktar = item.IadeMiktari,
@@ -769,6 +771,8 @@ namespace ArıtmaEnvanter.Controllers
                     Miktar = item.IadeMiktari,
                     Tarih = DateTime.UtcNow,
                     CikisFormNo = iadeFormNo,
+                    FormKayitId = cikisHareket.FormKayitId,
+                    PersonelId = cikisHareket.PersonelId,
                     IslemYapanKisi = await GetKullaniciAdSoyad()
                 };
                 _db.DepoHareketler.Add(yeniHareket);

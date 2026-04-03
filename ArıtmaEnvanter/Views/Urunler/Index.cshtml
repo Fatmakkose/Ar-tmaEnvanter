@@ -663,6 +663,15 @@ else
 <div class="modal fade" id="genelIadeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
+            <div id="ViewBagRaflarData" style="display:none;">
+                @if (ViewBag.Raflar != null)
+                {
+                    foreach (var r in (List<ArıtmaEnvanter.Models.Entities.RafTanim>)ViewBag.Raflar)
+                    {
+                        <option value="@r.Id">@r.Ad</option>
+                    }
+                }
+            </div>
             <div class="modal-header border-0" style="background:#e8f5e9;">
                 <h5 class="modal-title" style="color:var(--success); font-weight:700;">
                     <i class="bi bi-arrow-return-left"></i> Toplu Stok İadesi (Belge ile)
@@ -1161,4 +1170,85 @@ else
              if(miktarInput) miktarInput.value = (parseFloat(e.target.value) || 0) * 25;
          }
      });
+        
+    $(document).ready(function() {
+       
+        $("#btnIadeSorgula").click(function() {
+            var formNo = $("#iadeSorguFormNo").val();
+            if (!formNo) {
+                alert("Lütfen bir form numarası giriniz.");
+                return;
+            }
+
+            $("#iadeTablosu tbody").html('<tr><td colspan="5" class="text-center">Sorgulanıyor...</td></tr>');
+
+            $.get('/Urunler/GetCikisIslemleriByFormNo', { formNo: formNo }, function(data) {
+                if (data.success) {
+                    var html = '';
+                    var hiddenHtml = '';
+                    data.hareketler.forEach(function(h, index) {
+                        html += `<tr>
+                            <td>${h.malzemeAd}</td>
+                            <td>${h.rafAd} (${h.rafNo || 'No Yok'})</td>
+                            <td><strong>${h.cikisMiktari} ${h.birim}</strong></td>
+                            <td>
+                                <input type="number" step="0.01" class="form-control form-control-sm iade-miktar-input"
+                                       data-index="${index}" max="${h.cikisMiktari}" min="0" value="0">
+                            </td>
+                            <td>
+                                 <select class="form-select form-select-sm iade-raf-select" data-index="${index}">
+                                    <option value="">Aynı Rafa İade</option>
+                                    ${$("#ViewBagRaflarData").html()}
+                                 </select>
+                            </td>
+                        </tr>`;
+
+                        hiddenHtml += `<div id="iade_item_${index}">
+                            <input type="hidden" name="items[${index}].HareketId" value="${h.id}" />
+                            <input type="hidden" name="items[${index}].IadeMiktari" class="hidden-iade-miktar" value="0" />
+                            <input type="hidden" name="items[${index}].HedefRafId" class="hidden-iade-raf" value="" />
+                        </div>`;
+                    });
+
+                    $("#iadeTablosu tbody").html(html);
+                    $("#iadeGizliAlanlar").html(hiddenHtml);
+                    $("#iadeUrunlerKonteyner").show();
+                    $("#genelIadeKaydetBtn").prop('disabled', false);
+                } else {
+                    $("#iadeTablosu tbody").html(`<tr><td colspan="5" class="text-center text-danger">${data.message}</td></tr>`);
+                    $("#genelIadeKaydetBtn").prop('disabled', true);
+                }
+            });
+        });
+
+       
+        $(document).on('input', '.iade-miktar-input', function() {
+            var index = $(this).data('index');
+            var miktar = $(this).val();
+            $(`input[name="items[${index}].IadeMiktari"]`).val(miktar.replace('.', ','));
+        });
+
+        
+        $(document).on('change', '.iade-raf-select', function() {
+            var index = $(this).data('index');
+            var rafId = $(this).val();
+            $(`input[name="items[${index}].HedefRafId"]`).val(rafId);
+        });
+
+      
+        $("#genelIadeKaydetBtn").click(function() {
+            var toplamIade = 0;
+            $(".iade-miktar-input").each(function() {
+                toplamIade += parseFloat($(this).val()) || 0;
+            });
+
+            if (toplamIade <= 0) {
+                alert("Lütfen iade edilecek miktarları giriniz.");
+                return;
+            }
+
+            $("#topluIadeForm").submit();
+        });
+    });
+
 </script>
