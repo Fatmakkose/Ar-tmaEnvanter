@@ -43,6 +43,6 @@ namespace ArıtmaEnvanter.Models.Entities
 
         [ForeignKey("FormKayitId")]
         public virtual FormKayit? FormKayit { get; set; }
-
+        public string? Aciklama { get; internal set; }
     }
 }

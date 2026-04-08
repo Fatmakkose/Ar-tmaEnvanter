@@ -409,11 +409,12 @@ namespace ArıtmaEnvanter.Controllers
                 Miktar = miktar,
                 Tarih = DateTime.UtcNow,
                 CikisFormNo = cikisFormNo,
+                Aciklama = aciklama,
                 IslemYapanKisi = await GetKullaniciAdSoyad(),
                 PersonelId = personelId,
                 FormKayitId = stok.FormKayitId
             };
-
+            _db.DepoHareketler.Add(hareket);
 
             if (cikisTuru == "Demirbaş" && personelId.HasValue)
             {
@@ -544,7 +545,9 @@ namespace ArıtmaEnvanter.Controllers
                     .ThenInclude(m => m.Birim)
                   .Include(h => h.KaynakDepo)
                   .Include(h => h.RafTanim)
-                  .Where(h => h.CikisFormNo == formNo && h.HedefDepoId == null)
+                  .Include(h => h.FormKayit)
+              .ThenInclude(f => f.Degerler)
+                 .Where(h => h.CikisFormNo == formNo && (h.HedefDepoId == null || h.HedefDepoId <= 0))
                   .ToListAsync();
             }
             else if (id.HasValue)
@@ -556,7 +559,9 @@ namespace ArıtmaEnvanter.Controllers
                     .ThenInclude(m => m.Birim)
                   .Include(h => h.KaynakDepo)
                   .Include(h => h.RafTanim)
-                  .FirstOrDefaultAsync(h => h.Id == id.Value && h.HedefDepoId == null);
+                  .Include(h => h.FormKayit)
+              .ThenInclude(f => f.Degerler)
+                  .FirstOrDefaultAsync(h => h.Id == id.Value && (h.HedefDepoId == null || h.HedefDepoId <= 0));
                 if (h != null)
                 {
                     hareketler.Add(h);
@@ -655,6 +660,7 @@ namespace ArıtmaEnvanter.Controllers
                 Tarih = DateTime.UtcNow,
                 CikisFormNo = cikisFormNo,
                 IslemYapanKisi = await GetKullaniciAdSoyad()
+               
             };
             _db.DepoHareketler.Add(hareket);
 
@@ -830,18 +836,24 @@ namespace ArıtmaEnvanter.Controllers
                 .ThenInclude(m => m.Birim)
               .Include(h => h.HedefDepo)
               .Include(h => h.RafTanim)
+              .Include(h => h.FormKayit)
+            .ThenInclude(f => f.Degerler)
               .Where(h => h.CikisFormNo == formNo && h.HedefDepoId != null)
               .ToListAsync();
-
-            if (!hareketler.Any())
+            if (hareketler == null || !hareketler.Any())
             {
-                TempData["Hata"] = "İade raporu bulunamadı.";
-                return RedirectToAction(nameof(Index));
+           
+                hareketler = await _db.DepoHareketler
+                    .Include(h => h.Malzeme).ThenInclude(m => m.Kategori)
+                    .Include(h => h.Malzeme).ThenInclude(m => m.Birim)
+                    .Include(h => h.HedefDepo)
+                    .Include(h => h.RafTanim)
+                    .Where(h => h.CikisFormNo == formNo)
+                    .ToListAsync();
             }
 
             return View(hareketler);
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Guncelle(int stokId, int? rafTanimId, string? rafNo, string? urunAdi)

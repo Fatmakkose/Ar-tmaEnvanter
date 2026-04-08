@@ -48,7 +48,7 @@ namespace ArıtmaEnvanter.Controllers
                 if (islemTipi == "Giris")
                     query = query.Where(h => h.KaynakDepoId == h.HedefDepoId);
                 else if (islemTipi == "Cikis")
-                    query = query.Where(h => h.HedefDepoId == null);
+                    query = query.Where(h => h.HedefDepoId == null || h.HedefDepoId == 0);
                 else if (islemTipi == "Iade")
                     query = query.Where(h => h.KaynakDepoId == null && h.HedefDepoId != null);
             }
@@ -101,7 +101,7 @@ namespace ArıtmaEnvanter.Controllers
                 if (islemTipi == "Giris")
                     query = query.Where(h => h.KaynakDepoId == h.HedefDepoId);
                 else if (islemTipi == "Cikis")
-                    query = query.Where(h => h.HedefDepoId == null);
+                    query = query.Where(h => h.HedefDepoId == null || h.HedefDepoId == 0);
                 else if (islemTipi == "Iade")
                     query = query.Where(h => h.KaynakDepoId == null && h.HedefDepoId != null);
             }
