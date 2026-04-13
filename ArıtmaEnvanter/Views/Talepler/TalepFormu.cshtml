@@ -1,0 +1,187 @@
+﻿@model ArıtmaEnvanter.Models.Entities.MalzemeTalepForm
+@{
+    Layout = null;
+}
+
+<style>
+    .form-outer-container {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        border: 1px solid #000;
+        font-family: Arial, sans-serif;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        border: 1px solid #000;
+        padding: 8px;
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .header-table {
+        height: 100px;
+    }
+
+    .logo-col {
+        width: 100px;
+    }
+
+    .info-col {
+        width: 200px;
+        text-align: left;
+        font-size: 10px;
+    }
+
+    .content-table thead th {
+        background-color: #f2f2f2;
+    }
+
+    .text-left {
+        text-align: left;
+        padding-left: 10px;
+    }
+
+    .footer-table {
+        margin-top: 20px;
+        border: none !important;
+    }
+
+        .footer-table td {
+            border: none !important;
+            padding: 0 15px;
+            vertical-align: top; 
+        }
+
+   
+    .signature-area {
+        height: 50px; 
+        width: 100%;
+    }
+
+    .signature-title {
+        font-weight: bold;
+        font-size: 12px;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .signature-footer {
+        font-size: 11px;
+        color: #333;
+    }
+
+    .form-title {
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .red-text {
+        color: red;
+        display: block;
+        margin-top: 5px;
+    }
+
+    @@media print {
+        body {
+            background: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        @@page {
+            size: auto;
+            margin: 10mm;
+        }
+
+        .form-outer-container {
+            border: 1px solid #000 !important; 
+            box-shadow: none;
+            width: 100%;
+            max-width: none;
+        }
+     
+        .no-print {
+            display: none;
+        }
+    }
+</style>
+
+<div class="form-outer-container">
+    <table class="header-table">
+        <tr>
+            <td class="logo-col">
+                <img src="/images/maskilogo.png" style="width: 100px;" />
+            </td>
+            <td class="form-title">
+                ARITMA TESİSLERİ DAİRESİ BAŞKANLIĞI<br />
+                ARITMA ŞUBE MÜDÜRLÜĞÜ
+                <span class="red-text">AMBAR MALZEME TALEP FORMU</span>
+            </td>
+            <td class="info-col">
+                DOKÜMAN NO: MASKİ-@Model.FormSiraNo.ToString("D4")<br />
+                YAYIN TARİHİ: @DateTime.Now.ToString("dd.MM.yyyy")<br />
+                REVİZYON: @(Model.OnayTarihi?.ToString("dd.MM.yyyy") ?? "-")
+            </td>
+        </tr>
+    </table>
+
+    <table class="content-table">
+        <thead>
+            <tr>
+                <th style="width: 50px;">SN</th>
+                <th>MALZEME ADI</th>
+                <th style="width: 100px;">BİRİM</th>
+                <th style="width: 100px;">MİKTAR</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int sn = 1;
+            }
+            @foreach (var satir in Model.Satirlar)
+            {
+                <tr>
+                    <td>@(sn++)</td>
+                    <td class="text-left">@satir.Stok.UrunAdi</td>
+                    <td>@satir.Stok.Birim</td>
+                    <td>@satir.Miktar</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <table class="footer-table">
+        <tr>
+            <td>
+                <div class="signature-title">TESİS ŞEFİ</div>
+                <div class="signature-area"></div>
+               
+            </td>
+            <td>
+                <div class="signature-title">TESLİM ALAN</div>
+                <div class="signature-area">(@Model.TalepEdenPersonel?.AdSoyad)</div>
+            </td>
+            <td>
+                <div class="signature-title">AMBAR</div>
+                <div class="signature-area"></div>
+            
+                   
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+<script>
+    window.onload = function () {
+        window.print();
+        window.onafterprint = function() {
+            window.close();
+        };
+    };
+</script>

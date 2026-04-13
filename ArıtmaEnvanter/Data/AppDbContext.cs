@@ -68,7 +68,9 @@ namespace ArıtmaEnvanter.Data
         public DbSet<KimyasalGiris> KimyasalGirisler { get; set; }
         public DbSet<KimyasalDevir> KimyasalDevirler { get; set; }
         public DbSet<Firma> Firmalar { get; set; }
-       
+        public DbSet<MalzemeTalepForm> MalzemeTalepFormlar { get; set; }
+        public DbSet<MalzemeTalepSatir> MalzemeTalepSatirlar { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -94,7 +96,7 @@ namespace ArıtmaEnvanter.Data
                 (CurrentDistrictId != null && p.BirimId == CurrentDistrictId)
             );
 
-            
+
             builder.Entity<Transfer>().HasQueryFilter(t =>
                 IsAdmin ||
                 (t.KaynakBirimId == CurrentDistrictId || t.HedefBirimId == CurrentDistrictId)
@@ -105,7 +107,7 @@ namespace ArıtmaEnvanter.Data
                 .Property(u => u.DynamicProperties)
                 .HasColumnType("jsonb");
 
-            
+
             builder.Entity<Birim>()
                 .HasOne(b => b.UstBirim)
                 .WithMany(b => b.AltBirimler)
@@ -117,7 +119,7 @@ namespace ArıtmaEnvanter.Data
                 .WithMany(k => k.AltKategoriler)
                 .HasForeignKey(k => k.UstKategoriId)
                 .OnDelete(DeleteBehavior.Restrict);
-           
+
             builder.Entity<Depo>()
             .HasOne(d => d.UstDepo)
              .WithMany(d => d.AltDepolar)
@@ -182,6 +184,26 @@ namespace ArıtmaEnvanter.Data
                 .HasOne(t => t.OnaylayanUser)
                 .WithMany()
                 .HasForeignKey(t => t.OnaylayanUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<MalzemeTalepForm>()
+              .HasOne(t => t.TalepEdenPersonel)
+              .WithMany()
+              .HasForeignKey(t => t.TalepEdenPersonelId)
+              .OnDelete(DeleteBehavior.Restrict);
+
+
+            builder.Entity<MalzemeTalepSatir>()
+                .HasOne(s => s.MalzemeTalepForm)
+                .WithMany(f => f.Satirlar)
+                .HasForeignKey(s => s.MalzemeTalepFormId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            builder.Entity<MalzemeTalepSatir>()
+                .HasOne(s => s.Stok)
+                .WithMany()
+                .HasForeignKey(s => s.StokId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ArıtmaEnvanter.Models.Entities
 {
@@ -9,7 +10,7 @@ namespace ArıtmaEnvanter.Models.Entities
         [Required(ErrorMessage = "Raf adı zorunludur.")]
         [Display(Name = "Raf Adı")]
         public string Ad { get; set; } = null!;
-
+       
         [Required(ErrorMessage = "Sorumlu personel zorunludur.")]
         [Display(Name = "Sorumlu Personel")]
         public string SorumluPersonel { get; set; } = null!;

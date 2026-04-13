@@ -178,13 +178,26 @@
                             <td style="font-weight:600; color:var(--primary);">
                                 <div>@(hareket.Malzeme?.Ad ?? "Bilinmeyen Ürün")</div>
 
+
                                 @if (hareket.FormKayit != null && hareket.FormKayit.Degerler != null && hareket.FormKayit.Degerler.Any())
                                 {
-                                    <div class="text-secondary" style="font-weight:400; font-size: 11px; margin-top: 4px; line-height: 1.4;">
+                                    <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px;">
                                         @foreach (var deger in hareket.FormKayit.Degerler)
                                         {
-                                            <span class="badge bg-light text-dark border-0 me-1" style="font-size: 10px;">
-                                                <i class="bi bi-tag me-1 text-info"></i>@deger.Deger
+                                            <span style="
+                display: inline-block;
+                background-color: #eff6ff;
+                color: #1e40af;
+                border: 1px solid #bfdbfe;
+                border-radius: 12px;
+                padding: 2px 10px;
+                font-size: 11px;
+                font-weight: 700;
+                line-height: 1.2;
+                white-space: nowrap;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                            ">
+                                                <i class="bi bi-tag-fill" style="margin-right: 4px; font-size: 10px;"></i>@deger.Deger.ToUpper()
                                             </span>
                                         }
                                     </div>

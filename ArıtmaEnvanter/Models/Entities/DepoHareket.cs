@@ -27,22 +27,29 @@ namespace ArıtmaEnvanter.Models.Entities
         public string? IslemYapanKisi { get; set; }
 
         public DateTime Tarih { get; set; } = DateTime.UtcNow;
-      
+
         public int? TamirAtasmanId { get; set; }
         public TamirAtasman? TamirAtasman { get; set; }
-        
 
         public string? CikisFormNo { get; set; }
 
+       
+        public string? FormNo { get; set; }
+        public string? IslemTuru { get; set; }
+       
+
         public int? FirmaId { get; set; }
         public Firma? Firma { get; set; }
+
         public int? PersonelId { get; set; }
         [ForeignKey("PersonelId")]
         public virtual Personel? Personel { get; set; }
-        public int? FormKayitId { get; set; }
 
+        public int? FormKayitId { get; set; }
         [ForeignKey("FormKayitId")]
         public virtual FormKayit? FormKayit { get; set; }
-        public string? Aciklama { get; internal set; }
+
+        
+        public string? Aciklama { get; set; }
     }
 }

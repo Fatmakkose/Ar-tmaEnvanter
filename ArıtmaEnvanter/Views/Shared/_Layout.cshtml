@@ -84,6 +84,7 @@
 
                 @{
                     var isDepoMenuActive = depoMenuControllers.Contains(currentCtrl);
+                   
                 }
                 <div class="accordion-nav">
                     <button class="accordion-nav-header @(isDepoMenuActive ? "open" : "")" onclick="toggleAccordion(this)">
@@ -102,6 +103,10 @@
                         <a class="nav-item sub-item @(currentCtrl == "DepoHareket" ? "active" : "")" asp-controller="DepoHareket"
                             asp-action="Index">
                             <i class="bi bi-clock-history"></i> Stok Hareketleri
+                        </a>
+                        <a class="nav-item sub-item @(currentCtrl == "Talepler" ? "active" : "")" asp-controller="Talepler"
+                        asp-action="GelenTalepler">
+                            <i class="bi bi-bell-fill"></i> Gelen Talepler
                         </a>
                     </div>
                 </div>

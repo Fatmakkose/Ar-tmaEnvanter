@@ -92,6 +92,7 @@ namespace ArıtmaEnvanter.Controllers
             {
                 query = query.Where(h => h.Malzeme.Ad.Contains(arama) ||
                                          (h.CikisFormNo != null && h.CikisFormNo.Contains(arama)) ||
+                                         (h.FormNo != null && h.FormNo.Contains(arama)) |
                                          (h.IslemYapanKisi != null && h.IslemYapanKisi.Contains(arama)) ||
                                          (h.Personel != null && h.Personel.AdSoyad.Contains(arama)));
             }
