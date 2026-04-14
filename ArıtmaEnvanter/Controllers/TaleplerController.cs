@@ -73,54 +73,57 @@ namespace ArıtmaEnvanter.Controllers
         public async Task<IActionResult> Onayla(int id)
         {
             var form = await _db.MalzemeTalepFormlar
-                .Include(f => f.Satirlar).ThenInclude(s => s.Stok)
+                .Include(f => f.Satirlar).ThenInclude(s => s.Stok).ThenInclude(st => st.Malzeme)
                 .Include(f => f.TalepEdenPersonel)
                 .FirstOrDefaultAsync(f => f.Id == id);
 
             if (form == null || form.Durum != TalepDurumu.Beklemede) return NotFound();
 
-     
-            var yetersizStoklar = form.Satirlar.Where(s => s.Stok.Miktar < s.Miktar).ToList();
-            if (yetersizStoklar.Any())
-            {
-                var hataMesaji = "Onaylanamaz! Yetersiz stoklar: " +
-                    string.Join(", ", yetersizStoklar.Select(x => $"{x.Stok.UrunAdi} (Talep: {x.Miktar}, Mevcut: {x.Stok.Miktar})"));
-
-                TempData["Hata"] = hataMesaji;
-                return RedirectToAction(nameof(GelenTalepler));
-            }
-
-            var currentUser = await _userManager.GetUserAsync(User);
-            string formNo = $"MASKİ-{form.FormSiraNo:D4}";
+            var currentUser = await _userManager.GetUserAsync(User); 
+            string formNoString = $"MASKİ-{form.FormSiraNo:D4}";
 
             foreach (var satir in form.Satirlar)
             {
+                
                 satir.Stok.Miktar -= satir.Miktar;
 
-                _db.DepoHareketler.Add(new DepoHareket
+             
+                var yeniHareket = new DepoHareket
                 {
                     MalzemeId = satir.Stok.MalzemeId,
                     KaynakDepoId = satir.Stok.DepoId,
                     Miktar = satir.Miktar,
                     Tarih = DateTime.UtcNow,
+
                     IslemYapanKisi = currentUser.AdSoyad,
-                    FormNo = formNo,
+
+                    
+                    Aciklama = $"{formNoString} nolu talep onayı. Teslim Alan: {form.TalepEdenPersonel?.AdSoyad}",
+
+                  
+                    CikisFormNo = formNoString,
+                    FormNo = formNoString,
+
+                 
+                    FormKayitId = satir.Stok.FormKayitId,
+
+                   
                     RafTanimId = satir.Stok.RafTanimId,
                     RafNo = satir.Stok.RafNo,
-                    Aciklama = $"Form No {form.FormSiraNo} ile talep çıkışı.",
+
                     IslemTuru = "Çıkış"
-                });
+                };
+
+                _db.DepoHareketler.Add(yeniHareket);
             }
 
             form.Durum = TalepDurumu.Onaylandi;
             form.OnayTarihi = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
 
-            TempData["Basarili"] = $"MASKİ-{form.FormSiraNo:D4} onaylandı ve stoktan düşüldü.";
+            await _db.SaveChangesAsync();
             return RedirectToAction(nameof(GelenTalepler));
         }
 
-      
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reddet(int id)
