@@ -1,0 +1,115 @@
+@model AritmaEnvanter.Models.ViewModels.PoliCizelgeViewModel
+@{
+    string[] Aylar = { "OCAK", "ÞUBAT", "MART", "NÝSAN", "MAYIS", "HAZÝRAN", "TEMMUZ", "AÐUSTOS", "EYLÜL", "EKÝM", "KASIM", "ARALIK" };
+}
+
+<style>
+    .matrix-container {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+    }
+
+    .matrix-table {
+        font-size: 10px;
+        table-layout: fixed;
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .matrix-table th, .matrix-table td {
+            border: 1px solid #dee2e6;
+            text-align: center;
+            padding: 4px 1px !important;
+            height: 35px;
+        }
+
+        .matrix-table th {
+            background: #f1f5f9;
+            font-weight: bold;
+            color: #475569;
+        }
+
+    .bg-entry {
+        background-color: #e0f2fe !important;
+        border: 1px solid #7dd3fc !important;
+    }
+
+    .val-kg {
+        font-weight: 800;
+        color: #0369a1;
+        display: block;
+        line-height: 1;
+    }
+
+    .val-adet {
+        font-size: 8px;
+        color: #64748b;
+        display: block;
+        margin-top: 2px;
+    }
+
+    .empty-cell {
+        color: #f1f5f9;
+        font-size: 8px;
+    }
+
+    .month-label {
+        font-weight: bold;
+        background: #f8fafc;
+        font-size: 11px;
+        width: 70px;
+    }
+</style>
+<div class="d-print-none mb-3">
+    <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+        <i class="bi bi-arrow-left me-1"></i> Geri Dön
+    </a>
+</div>
+<div class="matrix-container shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold m-0"><i class="bi bi-grid-3x3-gap me-2"></i>POLÝ GÝRÝÞ/TESLÝMAT MATRÝSÝ (@Model.Yil)</h5>
+        <button onclick="window.print()" class="btn btn-sm btn-outline-secondary d-print-none">
+            <i class="bi bi-printer"></i> Yazdýr
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table matrix-table">
+            <thead>
+                <tr>
+                    <th class="month-label">AYLAR</th>
+                    @for (int i = 1; i <= 31; i++)
+                    {
+                        <th>@i</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (int ayIdx = 1; ayIdx <= 12; ayIdx++)
+                {
+                    <tr>
+                        <td class="month-label">@Aylar[ayIdx - 1]</td>
+                        @for (int gun = 1; gun <= 31; gun++)
+                        {
+                           
+                            var kayitlar = Model.Girisler.Where(g => g.Tarih.Month == ayIdx && g.Tarih.Day == gun).ToList();
+
+                            <td class="@(kayitlar.Any() ? "bg-entry" : "")">
+                                @if (kayitlar.Any())
+                                {
+                                    <span class="val-kg">@kayitlar.Sum(x => x.Kg).ToString("0")</span>
+                                    <span class="val-adet">@kayitlar.Sum(x => x.Adet).ToString("0") bdn</span>
+                                }
+                                else
+                                {
+                                    <span class="empty-cell">.</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,572 @@
+@model List<AritmaEnvanter.Models.Entities.FormSablon>
+@{
+    ViewData["Title"] = "Ürün Tanımları";
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-diagram-3-fill me-2" style="color:#00a8e8;"></i>Ürün Tanımları</h2>
+        <p>Ürün grupları için tanımlar oluşturun ve envanter kaydı yapın</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="TumVarliklar" class="btn-cyan" style="background: linear-gradient(135deg, #0f172a, #334155);">
+            <i class="bi bi-list-ul"></i> Tüm Ürünleri Gör
+        </a>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-action="Builder" class="btn-cyan">
+                <i class="bi bi-plus-lg"></i>Yeni Ürün Tanımı
+            </a>
+        }
+    </div>
+</div>
+
+<div class="filter-bar">
+    <div class="d-flex justify-content-between align-items-center w-100">
+        <form method="get" class="d-flex gap-2 flex-wrap align-items-center flex-grow-1 me-3">
+            <div style="position:relative;flex:1;min-width:200px;">
+                <i class="bi bi-search"
+                    style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px;"></i>
+                <input type="text" name="arama" value="@ViewBag.Arama" class="form-control" style="padding-left:34px;padding-right:40px;"
+                    placeholder="Şablon adı veya Kategori ile ara...">
+                <button type="button" onclick="openBarcodeModal()" title="Barkod ile Bul"
+                    style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#00a8e8;">
+                    <i class="bi bi-upc-scan fs-5"></i>
+                </button>
+            </div>
+            <button type="submit" class="btn-outline-filter"><i class="bi bi-funnel"></i> Filtrele</button>
+            <a asp-action="Index" class="btn-outline-clear"><i class="bi bi-x"></i> Temizle</a>
+        </form>
+
+        @if (User.IsInRole("Admin") && Model.Any())
+        {
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" id="toggleBulkMode" class="btn btn-sm btn-outline-secondary px-3" style="border-radius:20px; font-weight:600; font-size:12px; height:34px;">
+                    <i class="bi bi-check2-square me-1"></i> Toplu İşlemler
+                </button>
+                
+                <div id="bulkControls" class="align-items-center gap-2" style="display:none;">
+                    <div class="form-check me-2">
+                        <input class="form-check-input" type="checkbox" id="selectAll" style="width:1.2rem; height:1.2rem; cursor:pointer;">
+                        <label class="form-check-label small fw-bold text-muted" for="selectAll" style="cursor:pointer;">Tümünü Seç</label>
+                    </div>
+                    <form id="bulkDeleteForm" asp-action="TopluSil" method="post" onsubmit="return confirmBulkDelete()">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" id="bulkDeleteBtn" class="btn btn-sm btn-danger px-3 opacity-50" disabled style="border-radius:20px; font-weight:600; font-size:12px; height:34px;">
+                            <i class="bi bi-trash3-fill me-1"></i> Seçilenleri Sil
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (TempData["Basarili"] != null)
+{
+    <div class="alert-ok"><i class="bi bi-check-circle-fill"></i> @TempData["Basarili"]</div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert-err"><i class="bi bi-exclamation-circle-fill"></i> @TempData["Hata"]</div>
+}
+
+<div id="formIndexContainer">
+
+@if (!Model.Any())
+{
+    var hasStockOnly = ViewBag.StokKategorileri != null && ((List<string>)ViewBag.StokKategorileri).Any();
+    if (!hasStockOnly)
+    {
+        <div class="empty-state">
+            <i class="bi bi-ui-checks" style="font-size:44px;opacity:0.3;display:block;margin-bottom:12px;"></i>
+            <p>Henüz bir ürün şablonu tanımlanmamış.</p>
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-action="Builder" class="btn-cyan" style="margin-top:14px;display:inline-flex;">
+                    <i class="bi bi-plus-lg"></i> İlk Şablonu Oluştur
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info border-0 shadow-sm rounded-4 p-3 mb-4" style="background:#f0f9ff; border-left: 4px solid #00a8e8 !important;">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle-fill fs-4 me-3 text-info"></i>
+                <div style="font-size:13px; color:#0369a1; font-weight:500;">
+                    Henüz dinamik bir <b>ürün şablonu</b> tanımlanmamış. Ancak deponuzda kaydedilmiş <b>malzeme stokları</b> bulunmaktadır. 
+                    Aşağıdaki listeden bu stoklara erişebilirsiniz.
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@foreach (var anaForm in Model.OrderBy(f => f.OlusturmaTarihi))
+{
+        <div style="margin-bottom:20px;">
+            <div class="sablon-card"
+                style="display:flex;align-items:center;gap:12px;margin-bottom:10px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 20px;">
+                @if (User.IsInRole("Admin"))
+                {
+                    <div class="form-check m-0 sablon-check-wrapper">
+                        <input class="form-check-input sablon-check" type="checkbox" value="@anaForm.Id" style="width:1.1rem; height:1.1rem; cursor:pointer;">
+                    </div>
+                }
+                <div
+                    style="background:linear-gradient(135deg,#003d7a,#0066cc);width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-folder-fill" style="color:#fff;font-size:16px;"></i>
+                </div>
+                <div style="flex:1;">
+                    <div style="font-size:15px;font-weight:700;color:#003d7a;">@anaForm.Baslik</div>
+                    <div style="font-size:11px;color:#94a3b8;">
+                        @{
+                            int ekSayi = 0;
+                            if (ViewBag.EkSayilar != null && ((Dictionary<int, int>)ViewBag.EkSayilar).ContainsKey(anaForm.Id))
+                            {
+                                ekSayi = ((Dictionary<int, int>)ViewBag.EkSayilar)[anaForm.Id];
+                            }
+                        }
+                        ID: @(anaForm.HiyerarsikId ?? "-") — @anaForm.Alanlar.Count alan — @(anaForm.Kayitlar.Count + ekSayi) kayıt
+                    </div>
+                </div>
+                <div class="header-actions">
+
+                    <a asp-action="Kayitlar" asp-route-id="@anaForm.Id" class="btn-edit">
+                        <i class="bi bi-eye"></i> Kayıtlar
+                    </a>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a asp-action="Builder" asp-route-id="@anaForm.Id" class="btn-edit">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form asp-action="Sil" asp-route-id="@anaForm.Id" method="post" class="d-inline"
+                            onsubmit="return confirm('Silmek istediğinize emin misiniz?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-del"><i class="bi bi-trash"></i></button>
+                        </form>
+                    }
+                </div>
+            </div>
+
+            @if (anaForm.AltFormlar.Any())
+            {
+                <div style="margin-left:48px;border-left:2px solid #e2e8f0;padding-left:20px;">
+                    <div class="row g-3">
+                        @foreach (var altForm in anaForm.AltFormlar.OrderBy(a => a.OlusturmaTarihi))
+                        {
+                            <div class="col-md-4">
+                                <div class="data-card sablon-card" style="border-top:3px solid #00a8e8;">
+                                    <div style="padding:16px 20px;">
+                                        <div
+                                            style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+                                            <div style="display:flex;align-items:flex-start;gap:8px;">
+                                                @if (User.IsInRole("Admin"))
+                                                {
+                                                    <div class="form-check m-0 pt-1 sablon-check-wrapper">
+                                                        <input class="form-check-input sablon-check" type="checkbox" value="@altForm.Id" style="width:1rem; height:1rem; cursor:pointer;">
+                                                    </div>
+                                                }
+                                                <div>
+                                                    <div style="font-size:14px;font-weight:700;color:#1e293b;">
+                                                        <i class="bi bi-file-earmark-text" style="color:#00a8e8;"></i>
+                                                        @altForm.Baslik
+                                                    </div>
+                                                    <div style="font-size:11px;color:#94a3b8;margin-top:2px;">
+                                                        ID: @(altForm.HiyerarsikId ?? "-") — @altForm.Alanlar.Count alan
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span
+                                                style="background:#eff6ff;color:#003d7a;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;">
+                                                @{
+                                                    int altEkSayi = 0;
+                                                    if (ViewBag.EkSayilar != null && ((Dictionary<int, int>)ViewBag.EkSayilar).ContainsKey(altForm.Id))
+                                                    {
+                                                        altEkSayi = ((Dictionary<int, int>)ViewBag.EkSayilar)[altForm.Id];
+                                                    }
+                                                }
+                                                @(altForm.Kayitlar.Count + altEkSayi) kayıt
+                                            </span>
+                                        </div>
+                                        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+
+                                            <a asp-action="Kayitlar" asp-route-id="@altForm.Id" class="btn-edit"
+                                                style="font-size:12px;padding:6px 10px;">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            @if (User.IsInRole("Admin"))
+                                            {
+                                                <a asp-action="Builder" asp-route-id="@altForm.Id" class="btn-edit"
+                                                    style="font-size:12px;padding:6px 10px;">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <form asp-action="Sil" asp-route-id="@altForm.Id" method="post" class="d-inline"
+                                                    onsubmit="return confirm('Silmek istediğinize emin misiniz?')">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn-del" style="font-size:12px;padding:6px 10px;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+}
+
+</div>
+
+
+
+
+<div class="modal fade" id="barcodeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" style="color:#003d7a;font-weight:700;">
+                    <i class="bi bi-upc-scan me-2"></i>Barkod (Seri No) Okut
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="alert alert-info text-start p-2 mb-3" style="font-size:13px;">
+                    <i class="bi bi-info-circle-fill me-1"></i> Kameranızı sistemden oluşturduğunuz barkoda doğru tutun. Okuyucu cihaz kullanıyorsanız doğrudan okutabilirsiniz.
+                </div>
+                
+                <div id="reader" style="width: 100%; max-width: 400px; margin: 0 auto; border-radius:12px; overflow:hidden;"></div>
+                
+                <div class="mt-3">
+                    <label for="barcodeFile" class="btn btn-outline-secondary btn-sm px-4 rounded-pill" style="font-size:13px;">
+                        <i class="bi bi-image me-1"></i> Galeriden / Fotoğraf Seç
+                    </label>
+                    <input type="file" id="barcodeFile" accept="image/*" style="display:none;" onchange="scanSelectedFile(event)">
+                </div>
+
+                <div class="mt-4">
+                    <label class="form-label" style="font-size:13px;font-weight:600;color:#64748b;">Barkodu Elle / Okuyucu Cihazla Girin</label>
+                    <input type="text" id="manualBarcode" class="form-control text-center form-control-lg" placeholder="Örn: MASKI-20240226-0001" style="border-radius:8px; font-weight:700; letter-spacing:1px;" autocomplete="off" autofocus>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        #reader__dashboard_section_csr span, 
+        #reader__dashboard_section_swaplink { display: none !important; }
+        #reader { border: 2px solid #e2e8f0 !important; }
+        #reader img { object-fit: contain; }
+        .data-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.08) !important;
+            border-top-color: #0d9488 !important;
+        }
+
+      
+        #bulkControls, .sablon-check-wrapper {
+            display: none !important;
+        }
+
+        .bulk-mode-active #bulkControls, 
+        .bulk-mode-active .sablon-check-wrapper {
+            display: flex !important;
+        }
+        
+        .bulk-mode-active .sablon-check-wrapper-block {
+            display: block !important;
+        }
+    </style>
+    <script>
+        let html5QrCode = null;
+        let bModalEl = document.getElementById('barcodeModal');
+        let bModalInstance = null;
+
+        const qrFormatsToSupport = [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.QR_CODE
+        ];
+
+        function openBarcodeModal() {
+            if (!bModalInstance) {
+                bModalInstance = new bootstrap.Modal(bModalEl);
+            }
+            bModalInstance.show();
+        }
+
+        bModalEl.addEventListener('shown.bs.modal', function () {
+            document.getElementById('manualBarcode').focus();
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader", { 
+                    formatsToSupport: qrFormatsToSupport,
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    }
+                });
+                
+                const config = { 
+                    fps: 10, 
+                    qrbox: { width: 300, height: 120 },
+                    aspectRatio: 1.0,
+                    disableFlip: false
+                };
+
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    onScanSuccess,
+                    (errorMessage) => { } 
+                ).catch(err => {
+                    console.log("Kamera başlatılamadı:", err);
+                    document.getElementById('reader').innerHTML = `<div class="p-4 text-danger"><i class="bi bi-camera-video-off fs-1 d-block mb-3"></i><b>Kamera Hatası:</b> ${err}<br><br><small>Fiziksel okuyucu veya Fotoğraf Seçeneğini kullanabilirsiniz.</small></div>`;
+                });
+            }
+        });
+
+        function onScanSuccess(decodedText) {
+            closeScanner();
+            sorgulaVeFiltrele(decodedText);
+        }
+
+        function scanSelectedFile(e) {
+            if (e.target.files && e.target.files.length > 0) {
+                const file = e.target.files[0];
+                if (!html5QrCode) {
+                    html5QrCode = new Html5Qrcode("reader", { 
+                        formatsToSupport: qrFormatsToSupport,
+                        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+                    });
+                }
+                
+                let promise = Promise.resolve();
+                if (html5QrCode.isScanning) {
+                    promise = html5QrCode.stop();
+                }
+
+                promise.then(() => {
+                    Swal.fire({
+                        title: 'Fotoğraf Taranıyor...',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+
+                    html5QrCode.scanFileV2(file)
+                        .then(decodedResult => {
+                            Swal.close();
+                            onScanSuccess(decodedResult.decodedText);
+                        })
+                        .catch(err => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Okunamadı',
+                                text: 'Fotoğraftaki barkod tespit edilemedi. Lütfen daha net veya ışıklı bir fotoğraf seçin.'
+                            });
+                        });
+                }).catch(err => {
+                    console.log("Kamera durdurulamadı:", err);
+                });
+                
+                e.target.value = ''; 
+            }
+        }
+
+        function closeScanner() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    html5QrCode = null;
+                }).catch(e => {
+                    html5QrCode = null;
+                });
+            } else if (html5QrCode) {
+                 html5QrCode.clear();
+                 html5QrCode = null;
+            }
+            
+            if (bModalInstance) {
+                bModalInstance.hide();
+            }
+        }
+
+        bModalEl.addEventListener('hidden.bs.modal', function () {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => { html5QrCode.clear(); html5QrCode = null; }).catch(e => {});
+            }
+            document.getElementById('manualBarcode').value = '';
+        });
+
+        document.getElementById('manualBarcode').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const v = this.value.trim();
+                if(v) {
+                    closeScanner();
+                    sorgulaVeFiltrele(v);
+                }
+            }
+        });
+
+        document.getElementById('manualBarcode').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const v = this.value.trim();
+                if(v) {
+                    closeScanner();
+                    sorgulaVeFiltrele(v);
+                }
+            }
+        });
+
+        function sorgulaVeFiltrele(barkod) {
+            Swal.fire({
+                title: 'Aranıyor...',
+                text: 'Demirbaş bilgileri sorgulanıyor.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            fetch('/Form/BarkodSorgula?barkod=' + encodeURIComponent(barkod))
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Bulundu!',
+                            html: `<b>${data.urunAdi}</b> ürünü <b>${data.kategoriAd}</b> kategorisindedir.<br><br>Sayfa bu kategoriye göre filtreleniyor...`,
+                            timer: 2500,
+                            timerProgressBar: true,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = '/Form/Index?arama=' + encodeURIComponent(data.kategoriAd);
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Bulunamadı',
+                            text: data.message,
+                            confirmButtonText: 'Tamam'
+                        });
+                    }
+                })
+                .catch(err => {
+                    Swal.fire('Hata', 'Bir hata oluştu: ' + err, 'error');
+                });
+        }
+
+        
+        const toggleBulkModeBtn = document.getElementById('toggleBulkMode');
+        const selectAll = document.getElementById('selectAll');
+        const checks = document.querySelectorAll('.sablon-check');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+
+        if (toggleBulkModeBtn) {
+            toggleBulkModeBtn.addEventListener('click', function() {
+                const isActive = document.body.classList.toggle('bulk-mode-active');
+                
+                if (isActive) {
+                    this.innerHTML = '<i class="bi bi-x-lg me-1"></i> İptal';
+                    this.classList.replace('btn-outline-secondary', 'btn-secondary');
+                } else {
+                    this.innerHTML = '<i class="bi bi-check2-square me-1"></i> Toplu İşlemler';
+                    this.classList.replace('btn-secondary', 'btn-outline-secondary');
+                    
+                    if (selectAll) selectAll.checked = false;
+                    checks.forEach(c => {
+                        c.checked = false;
+                        updateRowHighlight(c);
+                    });
+                    updateBulkDeleteState();
+                }
+            });
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function() {
+                checks.forEach(c => {
+                    c.checked = this.checked;
+                    updateRowHighlight(c);
+                });
+                updateBulkDeleteState();
+            });
+        }
+
+        checks.forEach(c => {
+            c.addEventListener('change', function() {
+                updateRowHighlight(this);
+                updateBulkDeleteState();
+                
+                if (selectAll) {
+                    const allChecked = Array.from(checks).every(check => check.checked);
+                    const someChecked = Array.from(checks).some(check => check.checked);
+                    selectAll.checked = allChecked;
+                    selectAll.indeterminate = someChecked && !allChecked;
+                }
+            });
+        });
+
+        function updateRowHighlight(checkbox) {
+            const card = checkbox.closest('.sablon-card');
+            if (card) {
+                if (checkbox.checked) {
+                    card.style.borderColor = "#ef4444";
+                    card.style.backgroundColor = "#fff5f5";
+                } else {
+                    card.style.borderColor = "#e2e8f0";
+                    card.style.backgroundColor = "#fff";
+                }
+            }
+        }
+
+        function updateBulkDeleteState() {
+            if (!bulkDeleteBtn) return;
+            const checkedCount = Array.from(checks).filter(c => c.checked).length;
+            
+            if (checkedCount > 0) {
+                bulkDeleteBtn.disabled = false;
+                bulkDeleteBtn.classList.remove('opacity-50');
+                bulkDeleteBtn.innerHTML = `<i class="bi bi-trash3-fill me-1"></i> Seçilenleri Sil (${checkedCount})`;
+            } else {
+                bulkDeleteBtn.disabled = true;
+                bulkDeleteBtn.classList.add('opacity-50');
+                bulkDeleteBtn.innerHTML = `<i class="bi bi-trash3-fill me-1"></i> Seçilenleri Sil`;
+            }
+        }
+
+        function confirmBulkDelete() {
+            const checkedCount = Array.from(checks).filter(c => c.checked).length;
+            if (checkedCount === 0) return false;
+
+           
+            const oldInputs = bulkDeleteForm.querySelectorAll('input[name="ids"]');
+            oldInputs.forEach(input => input.remove());
+
+          
+            checks.forEach(c => {
+                if (c.checked) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'ids';
+                    input.value = c.value;
+                    bulkDeleteForm.appendChild(input);
+                }
+            });
+
+            return confirm(`Seçilen ${checkedCount} adet formu ve tüm ilişkili kayıtlarını (alanlar, değerler, alt formlar) silmek istediğinize emin misiniz?\n\nBU İŞLEM GERİ ALINAMAZ!`);
+        }
+    </script>
+}

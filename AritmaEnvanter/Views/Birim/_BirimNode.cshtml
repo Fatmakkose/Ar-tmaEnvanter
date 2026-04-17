@@ -1,0 +1,63 @@
+@model Tuple<AritmaEnvanter.Models.Entities.Birim, int, List<AritmaEnvanter.Models.Entities.Birim>>
+@{
+    var currentNode = Model.Item1;
+    int level = Model.Item2;
+    var allNodes = Model.Item3;
+    var children = allNodes.Where(n => n.UstBirimId == currentNode.Id).OrderBy(n => n.Ad).ToList();
+    var hasChildren = children.Any();
+    
+    
+    string nodeClass = level == 0 ? "birim-node-root" : "birim-node-child";
+    string iconClass = level == 0 ? "bi bi-diagram-3-fill root-icon" : "bi bi-building child-icon";
+}
+
+<div class="birim-node @nodeClass" style="margin-left: @(level * 30)px;">
+   
+    @if(level > 0)
+    {
+        <div class="birim-line-v"></div>
+        <div class="birim-line-h"></div>
+    }
+
+    <div class="birim-content d-flex align-items-center justify-content-between p-3 mb-2 bg-white rounded shadow-sm border" style="position:relative; z-index:2;">
+        <div class="birim-info d-flex align-items-center gap-3">
+            <div class="birim-icon-box @(level == 0 ? "bg-primary text-white" : "bg-light text-secondary") rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="@iconClass" style="font-size: 1.2rem;"></i>
+            </div>
+            
+            <strong class="@(level == 0 ? "text-primary fs-5" : "text-dark fs-6")" style="font-weight: 600;">
+                @currentNode.Ad
+            </strong>
+            
+            @if (hasChildren)
+            {
+                <i class="bi bi-chevron-down text-muted ms-2 toggle-icon" style="cursor: pointer; transition: transform 0.3s;" onclick="toggleBirimChildren(@currentNode.Id, this)"></i>
+            }
+        </div>
+        
+        <div class="birim-actions d-flex gap-2">
+            <a href="/Birim/Duzenle/@currentNode.Id" class="btn btn-sm btn-outline-primary border-0" title="Düzenle">
+                <i class="bi bi-pencil"></i>
+            </a>
+            <form action="/Birim/Sil/@currentNode.Id" method="post" class="d-inline" onsubmit="return confirm('@currentNode.Ad birimini silmek istediğinize emin misiniz?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Sil">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    @if (hasChildren)
+    {
+        <div class="birim-children-container" id="children-@currentNode.Id" style="position: relative;">
+           
+            <div class="birim-children-line-v" style="position: absolute; left: 19px; top: -10px; bottom: 15px; width: 2px; background-color: #e0e0e0; z-index: 1;"></div>
+            
+            @foreach (var child in children)
+            {
+                @await Html.PartialAsync("_BirimNode", new Tuple<AritmaEnvanter.Models.Entities.Birim, int, List<AritmaEnvanter.Models.Entities.Birim>>(child, level + 1, allNodes))
+            }
+        </div>
+    }
+</div>

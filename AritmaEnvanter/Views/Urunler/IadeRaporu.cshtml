@@ -1,0 +1,117 @@
+@model List<AritmaEnvanter.Models.Entities.DepoHareket>
+@{
+    ViewData["Title"] = "Ürün İade Fişi";
+    var ilkHareket = Model.FirstOrDefault();
+    var toplamMiktar = Model.Sum(m => m.Miktar);
+    var evrakNo = ilkHareket?.CikisFormNo ?? "Bilinmiyor";
+}
+
+<div class="report-container mt-4 mb-5" style="max-width:800px; margin:0 auto; background:#fff; border:1px solid #ccc; padding:40px; box-shadow:0 4px 15px rgba(0,0,0,0.05);">
+    <div class="report-header" style="text-align:center; margin-bottom:30px; border-bottom:2px solid #333; padding-bottom:15px;">
+        <img src="~/images/maskilogo.png" alt="MASKİ Logo" style="height: 70px; margin-bottom: 15px;" />
+        <h3 style="margin:0; text-transform:uppercase; font-weight:800; letter-spacing:1px; color:#333;">Ürün İade Fişi</h3>
+        @if (ilkHareket != null && !string.IsNullOrEmpty(ilkHareket.CikisFormNo))
+        {
+            <p style="margin:5px 0 0 0; color:#555; font-size:14px;">Belge No: @ilkHareket.CikisFormNo</p>
+        }
+    </div>
+
+    @if (TempData["Basarili"] != null)
+    {
+        <div class="alert alert-success d-print-none mb-4" style="background-color:#d4edda; border-color:#c3e6cb; color:#155724; padding:15px; border-radius:4px;">
+            <i class="bi bi-check-circle-fill"></i> @TempData["Basarili"]
+        </div>
+    }
+
+    <div class="report-info mb-4">
+        <table style="width:100%; border-collapse:collapse; font-size:14px;">
+            <tbody>
+                <tr>
+                    <td style="padding:8px; border:1px solid #ddd; background:#f9f9f9; width:250px; font-weight:600; color:#666; text-transform:uppercase;">Geçerlilik Tarihi/Saati</td>
+                    <td style="padding:8px; border:1px solid #ddd; color:#333;">
+                        @(ilkHareket?.Tarih.ToLocalTime().ToString("dd.MM.yyyy HH:mm") ?? DateTime.Now.ToString("dd.MM.yyyy HH:mm"))
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:8px; border:1px solid #ddd; background:#f9f9f9; width:250px; font-weight:600; color:#666; text-transform:uppercase;">İşlemi Yapan</td>
+                    <td style="padding:8px; border:1px solid #ddd; color:#333;">
+                        @(ilkHareket?.IslemYapanKisi ?? User.Identity?.Name)
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h5 style="font-weight:700; color:#1b3b6c; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;">İade Edilen Ürün Bilgileri</h5>
+
+    <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:30px; text-align:left;">
+        <thead>
+            <tr style="background-color:#f4f6f9; color:#444; text-transform:uppercase;">
+                <th style="padding:10px; border:1px solid #ccc;">Ürün Adı</th>
+                <th style="padding:10px; border:1px solid #ccc;">Özellikler</th> 
+                <th style="padding:10px; border:1px solid #ccc;">İade Yapılan Hedef Raf</th>
+                <th style="padding:10px; border:1px solid #ccc; width:100px;">İade Miktarı</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var hareket in Model)
+            {
+                <tr>
+                    <td style="padding:10px; border:1px solid #ccc; font-weight:500;">
+                        @hareket.Malzeme?.Ad
+                    </td>
+
+                    <td style="padding:10px; border:1px solid #ccc; color:#555;">
+                        @if (hareket.FormKayit?.Degerler != null && hareket.FormKayit.Degerler.Any())
+                        {
+                            <span style="font-weight: 500;">
+                                @string.Join(" | ", hareket.FormKayit.Degerler.Select(d => d.Deger))
+                            </span>
+                        }
+                        else
+                        {
+                            <i style="color:#999; font-size:12px;">Tanımlı özellik bulunamadı</i>
+                        }
+                    </td>
+
+                    <td style="padding:10px; border:1px solid #ccc; color:#555;">
+                        @(hareket.HedefDepo?.Ad) / @(hareket.RafTanim?.Ad ?? "Genel Alan")
+                        @if (!string.IsNullOrEmpty(hareket.RafNo))
+                        {
+                            <span>(No: @hareket.RafNo)</span>
+                        }
+                    </td>
+
+                    <td style="padding:10px; border:1px solid #ccc; font-weight:bold; color:#1b3b6c; font-size:14px;">
+                        @hareket.Miktar @hareket.Malzeme?.Birim?.Ad
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="report-signatures mt-5" style="display:flex; justify-content:space-between; margin-top:60px;">
+        <div class="signature-box" style="width:40%; text-align:center;">
+            <p style="font-weight:700; margin-bottom:50px; color:#1b3b6c;">İade Eden</p>
+            <div style="border-bottom:1px dotted #333; margin:0 20px;"></div>
+            <p style="margin-top:10px; font-size:12px; color:#777;">İmza</p>
+        </div>
+        <div class="signature-box" style="width:40%; text-align:center;">
+            <p style="font-weight:700; margin-bottom:50px; color:#1b3b6c;">Teslim Alan (Depo Yöneticisi)</p>
+            <div style="border-bottom:1px dotted #333; margin:0 20px;"></div>
+            <p style="margin-top:10px; font-size:12px; color:#777;">İmza</p>
+        </div>
+    </div>
+</div>
+
+<div class="text-center d-print-none mt-3 mb-5">
+    <a asp-action="Index" class="btn btn-secondary px-4 py-2" style="border-radius:6px; font-weight:500;">
+        <i class="bi bi-arrow-left"></i> Geri Dön
+    </a>
+    <a asp-action="Index" class="btn btn-success px-4 py-2 ms-2" style="border-radius:6px; font-weight:500;">
+        <i class="bi bi-boxes"></i> Ürünlere Dön
+    </a>
+    <button onclick="window.print()" class="btn btn-primary px-4 py-2 ms-2" style="border-radius:6px; font-weight:500;">
+        <i class="bi bi-printer"></i> Şimdi Yazdır
+    </button>
+</div>

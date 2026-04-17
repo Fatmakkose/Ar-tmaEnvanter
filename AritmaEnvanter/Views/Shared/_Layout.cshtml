@@ -1,0 +1,239 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<AritmaEnvanter.Models.Entities.ApplicationUser> SignInManager
+@inject UserManager<AritmaEnvanter.Models.Entities.ApplicationUser> UserManager
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — Arıtma Envanter</title>
+    <meta name="description" content="Arıtma Envanter Yönetim Sistemi" />
+    <link rel="manifest" href="~/manifest.json" />
+    <meta name="theme-color" content="#003d7a" />
+    <link rel="apple-touch-icon" href="~/images/maskilogo.png" />
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+   
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body>
+    @if (SignInManager.IsSignedIn(User))
+
+    {
+        @* *@
+        <div class="shell">
+
+            @*  *@
+            <nav class="sidebar" id="sidebar">
+                <div class="sidebar-logo" style="flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 25px 20px 20px;">
+                    <div class="logo-icon" style="width: auto; height: auto; margin-bottom: 5px; background: transparent;">
+                        <img src="~/images/maskilogo.png" alt="MASKİ Logo"
+                            style="max-width: 140px; height: auto; object-fit: contain; filter: brightness(0) invert(1);" />
+                    </div>
+                    <div>
+                        <div class="logo-text" style="font-size: 16px; letter-spacing: 0.5px; font-weight: 800;">ARITMA ENVANTER</div>
+                        <div class="logo-sub" style="font-size: 10px; opacity: 0.8; text-transform: uppercase; color: #00a8e8;">Envanter Yönetim Sistemi</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">Ana Menü</div>
+
+                <a class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
+                    asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                @{
+                    var genelTanimlarControllers = new[] { "Form", "Depo", "RafTanim", "Firma" };
+
+                    var depoMenuControllers = new[] { "Zimmet", "Urunler", "DepoHareket" };
+
+                    var currentCtrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+
+
+                    var isGenelTanimlarActive = genelTanimlarControllers.Contains(currentCtrl);
+                }
+
+                <div class="accordion-nav">
+                    <button class="accordion-nav-header @(isGenelTanimlarActive ? "open" : "")"
+                        onclick="toggleAccordion(this)">
+                        <span><i class="bi bi-grid-1x2-fill"></i> Genel Tanımlar</span>
+                        <i class="bi bi-chevron-down acc-arrow"></i>
+                    </button>
+                    <div class="accordion-nav-body @(isGenelTanimlarActive ? "show" : "")">
+                        <a class="nav-item sub-item @(currentCtrl == "Form" ? "active" : "")" asp-controller="Form"
+                            asp-action="Index">
+                            <i class="bi bi-ui-checks-grid"></i> Malzeme Tanımı
+                        </a>
+                        <a class="nav-item sub-item @(currentCtrl == "Depo" ? "active" : "")" asp-controller="Depo"
+                            asp-action="Index">
+                            <i class="bi bi-building-fill"></i> Depo Tanımı
+                        </a>
+                        <a class="nav-item sub-item @(currentCtrl == "RafTanim" ? "active" : "")" asp-controller="RafTanim"
+                            asp-action="Index">
+                            <i class="bi bi-layout-three-columns"></i> Raf Tanımı
+                        </a>
+                        <a class="nav-item sub-item @(currentCtrl == "Firma" ? "active" : "")" asp-controller="Firma"
+                            asp-action="Index">
+                            <i class="bi bi-buildings"></i> Firma Tanımı
+                        </a>
+                    </div>
+                </div>
+
+                @{
+                    var isDepoMenuActive = depoMenuControllers.Contains(currentCtrl);
+                   
+                }
+                <div class="accordion-nav">
+                    <button class="accordion-nav-header @(isDepoMenuActive ? "open" : "")" onclick="toggleAccordion(this)">
+                        <span><i class="bi bi-box-seam"></i> Depo</span>
+                        <i class="bi bi-chevron-down acc-arrow"></i>
+                    </button>
+                    <div class="accordion-nav-body @(isDepoMenuActive ? "show" : "")">
+                        <a class="nav-item sub-item @(currentCtrl == "Zimmet" ? "active" : "")" asp-controller="Zimmet"
+                            asp-action="Index">
+                            <i class="bi bi-clipboard2-check-fill"></i> Zimmetler
+                        </a>
+                        <a class="nav-item sub-item @(currentCtrl == "Urunler" ? "active" : "")" asp-controller="Urunler"
+                            asp-action="Index">
+                            <i class="bi bi-boxes"></i> Ürünler
+                        </a>
+                        <a class="nav-item sub-item @(currentCtrl == "DepoHareket" ? "active" : "")" asp-controller="DepoHareket"
+                            asp-action="Index">
+                            <i class="bi bi-clock-history"></i> Stok Hareketleri
+                        </a>
+                        <a class="nav-item sub-item @(currentCtrl == "Talepler" ? "active" : "")" asp-controller="Talepler"
+                        asp-action="GelenTalepler">
+                            <i class="bi bi-bell-fill"></i> Gelen Talepler
+                        </a>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">İnsan Kaynakları</div>
+
+                <a class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Personel" ? "active" : "")"
+                    asp-controller="Personel" asp-action="Index">
+                    <i class="bi bi-people-fill"></i> Personel
+                </a>
+                <a class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Birim" ? "active" : "")"
+                    asp-controller="Birim" asp-action="Index">
+                    <i class="bi bi-diagram-3-fill"></i> Birimler
+                </a>
+                
+
+
+                @if (User.IsInRole("Admin"))
+
+
+
+                {
+                    <div class="sidebar-section">Yönetim</div>
+                    <a class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")"
+                        asp-controller="Admin" asp-action="Kullanicilar">
+                        <i class="bi bi-person-gear"></i> Kullanıcılar
+                    </a>
+                }
+
+                @*  *@
+                <div class="sidebar-user">
+                    @{
+                        var userName = User.Identity?.Name ?? "Kullanıcı";
+                        var initials = userName.Length > 0 ? userName.Substring(0, 1).ToUpper() : "?";
+                    }
+                    <div class="avatar">@initials</div>
+                    <div class="user-info">
+                        <div class="name">@userName</div>
+                        <div class="role">Giriş Yapıldı</div>
+                    </div>
+                </div>
+            </nav>
+
+            @*  *@
+            <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+            <div class="main-wrap">
+
+                @* *@
+                <div class="topbar" style="z-index: 9999 !important;">
+                    <div class="topbar-left d-flex align-items-center" style="position: relative; z-index: 10000;">
+                        <button type="button" class="topbar-btn d-md-none me-2" onclick="toggleSidebar()" style="display: flex !important;">
+                            <i class="bi bi-list" style="font-size: 24px;"></i>
+                        </button>
+                        <div class="topbar-title">
+                            <i class="bi bi-droplet me-2" style="color:#00a8e8;"></i>
+                            <span class="d-none d-sm-inline">@(ViewData["Title"] as string ?? "AritmaEnvanter")</span>
+                            <span class="d-inline d-sm-none">Arıtma Env.</span>
+                        </div>
+                    </div>
+                    <div class="topbar-actions d-flex align-items-center gap-2">
+                        <button type="button" class="topbar-btn text-primary" title="Sayfayı Rapor Olarak Yazdır" onclick="window.print()" style="font-size: 18px; color: var(--primary) !important;">
+                            <i class="bi bi-printer-fill"></i>
+                        </button>
+                        <a asp-controller="Account" asp-action="Profil" class="topbar-btn" title="Profilim">
+                            <i class="bi bi-person-circle"></i>
+                        </a>
+                        <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="topbar-btn" title="Çıkış Yap">
+                                <i class="bi bi-box-arrow-right"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                @*  *@
+                <div class="content">
+                    @* *@
+                    <div class="print-header">
+                        <img src="~/images/maskilogo.png" alt="MASKİ" class="print-logo" />
+                        <div class="print-titles">
+                            <h2>T.C. MANİSA SU VE KANALİZASYON İDARESİ GENEL MÜDÜRLÜĞÜ</h2>
+                            <h3>@(ViewData["Title"] as string ?? "Envanter ve Stok") Rapor Dökümü</h3>
+                        </div>
+                        <div class="print-meta">
+                            <strong>Tarih:</strong> @DateTime.Now.ToString("dd.MM.yyyy HH:mm")<br />
+                            <strong>Oluşturan:</strong> @User.Identity?.Name
+                        </div>
+                    </div>
+
+                    @RenderBody()
+                </div>
+            </div>
+
+        </div>
+    }
+
+
+    else
+
+    {
+        @**@
+        @RenderBody()
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        function toggleAccordion(btn) {
+            var body = btn.nextElementSibling;
+            var isOpen = btn.classList.contains('open');
+            btn.classList.toggle('open', !isOpen);
+            body.classList.toggle('show', !isOpen);
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

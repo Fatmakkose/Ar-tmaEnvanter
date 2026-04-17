@@ -1,0 +1,193 @@
+@model List<AritmaEnvanter.Models.Entities.Birim>
+@{
+    ViewData["Title"] = "Birimler";
+    var tumBirimler = ViewBag.TumBirimler as List<AritmaEnvanter.Models.Entities.Birim> ?? new List<AritmaEnvanter.Models.Entities.Birim>();
+}
+
+@section Styles {
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        .page-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        .date-badge {
+            background-color: #e1f5fe;
+            color: #0277bd;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .search-container {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .search-input-group {
+            flex-grow: 1;
+            position: relative;
+        }
+        .search-input-group i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+        .search-input-group input {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+        }
+        .search-input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 168, 232, 0.1);
+        }
+        
+        .birim-list-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+        
+      
+        .birim-node {
+            position: relative;
+        }
+        
+        .birim-node-child .birim-line-h {
+            position: absolute;
+            left: -30px;
+            top: 25px;
+            width: 30px;
+            height: 2px;
+            background-color: #e0e0e0;
+            z-index: 1;
+        }
+        
+        .birim-content {
+            transition: all 0.2s;
+            border-left: 4px solid transparent !important;
+        }
+        
+        .birim-node-root > .birim-content {
+            border-color: var(--accent) !important;
+        }
+        
+        .birim-content:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+        }
+
+        .toggle-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-diagram-3-fill me-2" style="color:var(--accent);"></i>Birimler</h2>
+        <p style="font-size:13px; color:var(--text-muted);">
+            <i class="bi bi-house-door"></i> MASKİ &rsaquo; Birimler
+        </p>
+    </div>
+    <div class="d-flex flex-column align-items-end gap-3">
+        <div class="date-badge">
+            <i class="bi bi-calendar3"></i> @DateTime.Now.ToString("dd MMMM yyyy")
+        </div>
+        <a href="/Birim/Ekle" class="btn-cyan">
+            <i class="bi bi-plus-lg"></i> Yeni Birim Ekle
+        </a>
+    </div>
+</div>
+
+@if (TempData["Basarili"] != null)
+{
+    <div class="alert-ok mb-4"><i class="bi bi-check-circle-fill"></i> @TempData["Basarili"]</div>
+}
+@if (TempData["Hata"] != null)
+{
+    <div class="alert-err mb-4"><i class="bi bi-exclamation-triangle-fill"></i> @TempData["Hata"]</div>
+}
+
+<form asp-action="Index" method="get" class="search-container">
+    <div class="search-input-group">
+        <i class="bi bi-search"></i>
+        <input type="text" name="arama" value="@ViewBag.Arama" placeholder="Birim adı ile ara..." />
+    </div>
+    <button type="submit" class="btn btn-outline-primary" style="font-weight:600;">
+        <i class="bi bi-funnel"></i> Filtrele
+    </button>
+    <a href="/Birim" class="btn btn-light" style="font-weight:600; color:var(--text-muted);">
+        <i class="bi bi-x"></i> Temizle
+    </a>
+</form>
+
+<div class="birim-list-card">
+    <div class="d-flex align-items-center mb-4 pb-3 border-bottom">
+        <h5 class="m-0" style="color:var(--primary); font-weight:700;">
+            <i class="bi bi-table"></i> Birim Listesi 
+            <span class="badge rounded-pill ms-2" style="background-color: var(--primary);">@(tumBirimler?.Count ?? 0) kayıt</span>
+        </h5>
+    </div>
+    
+    <div class="tree-container pe-2">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var rootNode in Model)
+            {
+                @await Html.PartialAsync("_BirimNode", new Tuple<AritmaEnvanter.Models.Entities.Birim, int, List<AritmaEnvanter.Models.Entities.Birim>>(rootNode, 0, tumBirimler))
+            }
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-diagram-3" style="font-size: 48px; opacity:0.5;"></i>
+                <p class="mt-3" style="font-weight:600;">Görüntülenecek birim bulunamadı.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleBirimChildren(id, iconElement) {
+            var childrenContainer = document.getElementById('children-' + id);
+            if (childrenContainer) {
+                if (childrenContainer.style.display === 'none') {
+                    childrenContainer.style.display = 'block';
+                    iconElement.classList.remove('collapsed');
+                } else {
+                    childrenContainer.style.display = 'none';
+                    iconElement.classList.add('collapsed');
+                }
+            }
+        }
+    </script>
+}

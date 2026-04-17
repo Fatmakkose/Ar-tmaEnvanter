@@ -1,0 +1,496 @@
+@model AritmaEnvanter.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Profilim";
+}
+
+<style>
+    
+    .profile-container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .profile-hero {
+        background: linear-gradient(135deg, var(--maski-blue) 0%, var(--maski-blue-dark) 100%);
+        border-radius: 16px;
+        padding: 40px 30px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0, 61, 122, 0.15);
+    }
+
+    .profile-hero::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 400px;
+        height: 400px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .profile-hero-content {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .profile-avatar-large {
+        width: 110px;
+        height: 110px;
+        background: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 44px;
+        font-weight: 800;
+        color: var(--maski-blue);
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .profile-info-main h2 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 28px;
+        letter-spacing: -0.5px;
+    }
+
+    .profile-info-main p {
+        margin: 5px 0 0;
+        opacity: 0.8;
+        font-size: 15px;
+    }
+
+    .profile-nav-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        height: 100%;
+    }
+
+    .profile-nav-list {
+        padding: 15px;
+    }
+
+    .nav-pills .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        color: var(--text);
+        font-weight: 600;
+        font-size: 14px;
+        border-radius: 10px;
+        transition: all 0.2s;
+        margin-bottom: 5px;
+    }
+
+    .nav-pills .nav-link i {
+        font-size: 18px;
+        opacity: 0.7;
+    }
+
+    .nav-pills .nav-link:hover {
+        background: #f8faff;
+        color: var(--maski-blue);
+    }
+
+    .nav-pills .nav-link.active {
+        background: var(--maski-cyan-light);
+        color: var(--maski-blue);
+    }
+
+    .nav-pills .nav-link.active i {
+        opacity: 1;
+        color: var(--maski-cyan);
+    }
+
+    .profile-content-card {
+        background: #fff;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        min-height: 500px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    .content-header {
+        padding: 20px 30px;
+        border-bottom: 1px solid #f1f4fa;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .content-header h5 {
+        margin: 0;
+        font-weight: 700;
+        color: var(--maski-blue);
+        font-size: 16px;
+    }
+
+    .content-body {
+        padding: 30px;
+    }
+
+    .input-group-text.password-toggle {
+        cursor: pointer;
+        background: #f8faff;
+        border-left: none;
+    }
+
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-top: 5px;
+    }
+
+    .info-box {
+        background: #f8faff;
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid #eef2f8;
+    }
+
+    .info-box-label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--muted);
+        font-weight: 700;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .info-box-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--maski-blue);
+    }
+
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+</style>
+
+<div class="profile-container">
+   
+    <div class="profile-hero">
+        <div class="profile-hero-content">
+            <div class="profile-avatar-large">
+                @(Model.AdSoyad?.Substring(0, 1).ToUpper())
+            </div>
+            <div class="profile-info-main">
+                <h2>@Model.AdSoyad</h2>
+                <p><i class="bi bi-envelope me-1"></i> @Model.Email</p>
+                <div class="mt-2">
+                    <span class="badge bg-success status-badge">Aktif Oturum</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+       
+        <div class="col-lg-3 mb-4">
+            <div class="profile-nav-card">
+                <div class="profile-nav-list nav flex-column nav-pills" id="v-pills-tab" role="tablist"
+                    aria-orientation="vertical">
+                    <button class="nav-link active" id="v-pills-profil-tab" data-bs-toggle="pill"
+                        data-bs-target="#v-pills-profil" type="button" role="tab">
+                        <i class="bi bi-person-circle"></i> Profilim
+                    </button>
+                    <button class="nav-link" id="v-pills-zimmet-tab" data-bs-toggle="pill"
+                        data-bs-target="#v-pills-zimmet" type="button" role="tab">
+                        <i class="bi bi-box-seam"></i> Zimmetlerim
+                    </button>
+                    <button class="nav-link" id="v-pills-talepler-tab" data-bs-toggle="pill"
+                        data-bs-target="#v-pills-talepler" type="button" role="tab">
+                        <i class="bi bi-arrow-left-right"></i> Taleplerim
+                    </button>
+                    <button class="nav-link" id="v-pills-guvenlik-tab" data-bs-toggle="pill"
+                        data-bs-target="#v-pills-guvenlik" type="button" role="tab">
+                        <i class="bi bi-shield-lock"></i> Güvenlik & Şifre
+                    </button>
+                    <hr class="my-2 opacity-10">
+                    <a href="/Account/Logout" class="nav-link text-danger">
+                        <i class="bi bi-power"></i> Çıkış Yap
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <div class="profile-content-card tab-content" id="v-pills-tabContent">
+
+               
+                <div class="tab-pane fade show active" id="v-pills-profil" role="tabpanel">
+                    <div class="content-header">
+                        <h5><i class="bi bi-person text-cyan"></i> Profil Bilgileri</h5>
+                    </div>
+                    <div class="content-body">
+                        <form asp-action="Profil" method="post">
+                            <div asp-validation-summary="ModelOnly" class="alert-err"></div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label asp-for="AdSoyad" class="form-label"></label>
+                                    <input asp-for="AdSoyad" class="form-control" />
+                                    <span asp-validation-for="AdSoyad" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label asp-for="Email" class="form-label"></label>
+                                    <input asp-for="Email" class="form-control" />
+                                    <span asp-validation-for="Email" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold mt-2 mb-3 text-muted" style="font-size: 13px;">SİSTEM YETKİLERİ</h6>
+                            <div class="info-grid mb-4">
+                                <div class="info-box">
+                                    <span class="info-box-label">Rolünüz</span>
+                                    <div class="info-box-value">
+                                        @if (Model.Rol?.Contains("Admin") == true)
+                                        {
+                                            <span class="text-danger"><i class="bi bi-shield-check"></i> Admin</span>
+                                        }
+                                        else if (Model.Rol?.Contains("IlceSorumlusu") == true)
+                                        {
+                                            <span class="text-primary"><i class="bi bi-person-badge"></i> İlçe
+                                                Sorumlusu</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary"><i class="bi bi-person"></i> Kullanıcı</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="info-box">
+                                    <span class="info-box-label">Bağlı Birim</span>
+                                    <div class="info-box-value text-truncate">@(Model.BirimAd ?? "Tanımsız")</div>
+                                </div>
+                                <div class="info-box">
+                                    <span class="info-box-label">Sorumlu Raf</span>
+                                    <div class="info-box-value text-truncate">@(Model.DepoAd ?? "Atanmamış")</div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn-maski px-4">
+                                    <i class="bi bi-check2-all"></i> Bilgileri Güncelle
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                
+                <div class="tab-pane fade" id="v-pills-zimmet" role="tabpanel">
+                    <div class="content-header">
+                        <h5><i class="bi bi-box-seam text-cyan"></i> Üzerimdeki Zimmetler</h5>
+                    </div>
+                    <div class="content-body">
+                        @if (Model.Zimmetlerim.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Varlık / Ürün</th>
+                                            <th>MİKTAR</th>
+                                            <th>Zimmet Tarihi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.Zimmetlerim)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-bold text-maski">@(item.Malzeme?.Ad ?? (item.Urun != null ? item.Urun.UrunTuru : "—"))</div>
+                                                    @if (item.Urun != null) {
+                                                        <small class="text-muted">SN: @item.Urun.SeriNo</small>
+                                                    }
+                                                </td>
+                                                <td style="font-weight:700; color:#ef4444;">@item.ZimmetMiktari.ToString("0.##")</td>
+                                                <td class="small">@item.ZimmetTarihi.ToLocalTime().ToString("dd.MM.yyyy")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-5">
+                                <i class="bi bi-inbox text-muted" style="font-size: 40px;"></i>
+                                <p class="text-muted mt-2">Üzerinizde kayıtlı zimmet bulunamadı.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                
+                <div class="tab-pane fade" id="v-pills-talepler" role="tabpanel">
+                    <div class="content-header">
+                        <h5><i class="bi bi-arrow-left-right text-cyan"></i> Son Taleplerim</h5>
+                    </div>
+                    <div class="content-body">
+                        @if (Model.Taleplerim.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Hedef Depo</th>
+                                            <th>Tarih</th>
+                                            <th>Durum</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.Taleplerim)
+                                        {
+                                            <tr>
+                                                <td>@item.HedefDepo.Ad</td>
+                                                <td class="small">@item.TalepTarihi.ToString("dd.MM.yyyy")</td>
+                                                <td>
+                                                    @if (item.Durum == "Beklemede")
+                                                    {
+                                                        <span
+                                                            class="badge bg-warning">Beklemede</span>
+                                                    }
+                                                    else if (item.Durum == "Onaylandı")
+                                                    {
+                                                        <span
+                                                            class="badge bg-success">Onaylandı</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary">@item.Durum</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-5">
+                                <i class="bi bi-send-x text-muted" style="font-size: 40px;"></i>
+                                <p class="text-muted mt-2">Henüz bir talebiniz bulunmuyor.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                
+                <div class="tab-pane fade" id="v-pills-guvenlik" role="tabpanel">
+                    <div class="content-header">
+                        <h5><i class="bi bi-shield-lock text-cyan"></i> Şifre Değiştir</h5>
+                    </div>
+                    <div class="content-body">
+                        <form asp-action="Profil" method="post">
+                          
+                            <input type="hidden" asp-for="AdSoyad" />
+                            <input type="hidden" asp-for="Email" />
+
+                            <div class="mb-4">
+                                <label asp-for="CurrentPassword" class="form-label"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i
+                                            class="bi bi-key"></i></span>
+                                    <input asp-for="CurrentPassword" type="password" class="form-control border-start-0"
+                                        placeholder="Mevcut şifrenizi giriniz" />
+                                    <span class="input-group-text password-toggle" onclick="togglePassword(this)">
+                                        <i class="bi bi-eye-slash"></i>
+                                    </span>
+                                </div>
+                                <span asp-validation-for="CurrentPassword" class="text-danger small"></span>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label asp-for="NewPassword" class="form-label"></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0"><i
+                                                class="bi bi-lock text-muted"></i></span>
+                                        <input asp-for="NewPassword" type="password" class="form-control border-start-0"
+                                            placeholder="Yeni şifre" />
+                                        <span class="input-group-text password-toggle" onclick="togglePassword(this)">
+                                            <i class="bi bi-eye-slash"></i>
+                                        </span>
+                                    </div>
+                                    <span asp-validation-for="NewPassword" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6 mb-4">
+                                    <label asp-for="ConfirmNewPassword" class="form-label"></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0"><i
+                                                class="bi bi-check-circle text-muted"></i></span>
+                                        <input asp-for="ConfirmNewPassword" type="password"
+                                            class="form-control border-start-0" placeholder="Şifrenizi doğrulayın" />
+                                        <span class="input-group-text password-toggle" onclick="togglePassword(this)">
+                                            <i class="bi bi-eye-slash"></i>
+                                        </span>
+                                    </div>
+                                    <span asp-validation-for="ConfirmNewPassword" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-warning border-0 small d-flex gap-3"
+                                style="background: #fff9e6; border-radius: 12px;">
+                                <i class="bi bi-info-circle text-warning mt-1" style="font-size: 18px;"></i>
+                                <span>Güvenliğiniz için şifrenizin en az 6 karakterden oluştuğundan ve karmaşık
+                                    olduğundan emin olun.</span>
+                            </div>
+
+                            <div class="mt-4 pt-2">
+                                <button type="submit" class="btn btn-primary px-4"
+                                    style="background: var(--maski-blue); border-radius: 8px;">
+                                    <i class="bi bi-shield-check"></i> Yeni Şifreyi Kaydet
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePassword(button) {
+            const group = button.closest('.input-group');
+            const input = group.querySelector('input');
+            const icon = button.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            }
+        }
+    </script>
+}

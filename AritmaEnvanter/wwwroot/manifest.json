@@ -1,0 +1,22 @@
+{
+  "name": "Arıtma Envanter",
+  "short_name": "Arıtma",
+  "description": "Arıtma Envanter ve Stok Yönetim Sistemi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#001f3f",
+  "theme_color": "#003d7a",
+  "icons": [
+    {
+      "src": "/images/maskilogo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/maskilogo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

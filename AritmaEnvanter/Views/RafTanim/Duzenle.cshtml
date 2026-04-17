@@ -1,0 +1,108 @@
+@model AritmaEnvanter.Models.Entities.RafTanim
+@{
+    ViewData["Title"] = "Raf Düzenle";
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-pencil-square me-2" style="color:var(--accent);"></i>Raf Düzenle</h2>
+        <p style="font-size:13px; color:var(--text-muted);">
+            <i class="bi bi-house-door"></i> MASKİ &rsaquo; Raf Düzenle
+        </p>
+    </div>
+    <div class="header-actions">
+        <a asp-action="Index" class="btn-edit">
+            <i class="bi bi-arrow-left"></i> Geri Dön
+        </a>
+    </div>
+</div>
+
+<div style="background:var(--accent-lt); border:1px solid rgba(0,168,232,0.15); border-radius:var(--radius); padding:14px 20px; margin-bottom:18px; display:flex; align-items:center; gap:10px;">
+    <i class="bi bi-info-circle-fill" style="color:var(--accent); font-size:16px;"></i>
+    <span style="font-size:13px; font-weight:600; color:var(--primary);">@Model.Ad bilgisini güncelleyin.</span>
+</div>
+
+<div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;">
+ 
+    <div style="background:linear-gradient(135deg, #003d7a, #005baa); padding:16px 24px; display:flex; align-items:center; gap:10px;">
+        <i class="bi bi-layers-fill" style="color:#fff; font-size:18px;"></i>
+        <span style="color:#fff; font-size:15px; font-weight:700;">Raf Bilgileri</span>
+    </div>
+
+    
+    <div style="padding:28px 24px;">
+        <form asp-action="Duzenle" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="OlusturmaTarihi" />
+
+           
+            <div style="margin-bottom:20px;">
+                <label class="form-label" style="font-weight:700; font-size:13px; color:var(--text);">
+                    Raf Adı <span style="color:var(--danger);">*</span>
+                </label>
+                <input asp-for="Ad" class="form-control" placeholder="Raf adını girin" />
+                <span asp-validation-for="Ad" style="color:var(--danger); font-size:12px;"></span>
+            </div>
+
+           
+            <div class="row g-3" style="margin-bottom:20px;">
+                <div class="col-md-6">
+                    <label class="form-label" style="font-weight:700; font-size:13px; color:var(--text);">
+                        Sorumlu Personel <span style="color:var(--danger);">*</span>
+                    </label>
+                    <select asp-for="SorumluPersonel" class="form-select">
+                        <option value="">-- Personel Seçin --</option>
+                        @if (ViewBag.Personeller != null)
+                        {
+                            foreach (var p in ViewBag.Personeller)
+                            {
+                                <option value="@p.AdSoyad">@p.AdSoyad</option>
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="SorumluPersonel" style="color:var(--danger); font-size:12px;"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" style="font-weight:700; font-size:13px; color:var(--text);">
+                        İletişim (GSM)
+                    </label>
+                    <input asp-for="Iletisim" class="form-control" placeholder="05xxxxxxxxx" />
+                </div>
+                <div style="margin-bottom:20px; padding:15px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+                    <div class="form-check form-switch d-flex align-items-center gap-3">
+                        <input class="form-check-input" type="checkbox" role="switch" id="aktifMiSwitch"
+                               asp-for="AktifMi"
+                               style="width: 40px; height: 20px; cursor: pointer;">
+                        <div>
+                            <label class="form-check-label" for="aktifMiSwitch" style="font-weight:700; font-size:14px; color:var(--text); cursor: pointer;">
+                                Raf Durumu (Aktif)
+                            </label>
+                            <span style="display:block; font-size:12px; color:var(--text-muted);">
+                                Kapatırsanız bu raf listelerde "Pasif" olarak görünecektir.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+           
+            <div style="margin-bottom:28px;">
+                <label class="form-label" style="font-weight:700; font-size:13px; color:var(--text);">
+                    Açıklama / Notlar (İsteğe Bağlı)
+                </label>
+                <textarea asp-for="Aciklama" class="form-control" rows="3" placeholder="Raf ile ilgili ek notlar..." style="resize:vertical;"></textarea>
+            </div>
+
+            
+            <div style="display:flex; gap:10px; justify-content:flex-end; border-top:1px solid var(--border); padding-top:20px;">
+                <a asp-action="Index" class="btn-edit" style="padding:10px 24px;">
+                    <i class="bi bi-x-lg"></i> İptal
+                </a>
+                <button type="submit" class="btn-cyan" style="padding:10px 28px;">
+                    <i class="bi bi-check-lg"></i> Güncelle
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

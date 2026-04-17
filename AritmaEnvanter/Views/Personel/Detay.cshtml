@@ -1,0 +1,110 @@
+@model AritmaEnvanter.Models.Entities.Personel
+@{
+    ViewData["Title"] = "Personel Detayı";
+}
+
+<div class="page-header">
+    <div>
+        <h2><i class="bi bi-person-circle me-2" style="color:#00a8e8;"></i>@Model.AdSoyad</h2>
+        <p>@(Model.Unvan ?? "Personel") — @Model.Birim?.Ad</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+        <a asp-action="Duzenle" asp-route-id="@Model.Id" class="btn-edit">
+            <i class="bi bi-pencil"></i> Düzenle
+        </a>
+        <a asp-action="Index" class="btn-outline-clear">
+            <i class="bi bi-arrow-left"></i> Listeye Dön
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="data-card">
+            <div class="data-card-head">
+                <h6><i class="bi bi-person"></i> Personel Bilgileri</h6>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+                <div style="text-align:center;padding-bottom:16px;border-bottom:1px solid #f1f4fa;">
+                    <div
+                        style="width:70px;height:70px;background:#eff6ff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#003d7a;margin:0 auto 12px;">
+                        @Model.AdSoyad.Substring(0, 1).ToUpper()
+                    </div>
+                    <div style="font-size:17px;font-weight:700;color:#003d7a;">@Model.AdSoyad</div>
+                    <div style="font-size:13px;color:#64748b;">@(Model.Unvan ?? "—")</div>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span style="font-size:13px;color:#64748b;">Birim</span>
+                    <strong style="font-size:13px;color:#003d7a;">@Model.Birim?.Ad</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span style="font-size:13px;color:#64748b;">Telefon</span>
+                    <strong style="font-size:13px;">@(Model.Telefon ?? "—")</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span style="font-size:13px;color:#64748b;">Email</span>
+                    <strong style="font-size:13px;">@(Model.Email ?? "—")</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="data-card">
+            <div class="data-card-head">
+                <h6>
+                    <i class="bi bi-clipboard-check"></i> Zimmet Listesi
+                    <span class="record-count">@Model.Zimmetler.Count kayıt</span>
+                </h6>
+                <a href="/Zimmet/Olustur?personelId=@Model.Id" class="btn-cyan"
+                    style="font-size:12px;padding:6px 12px;">
+                    <i class="bi bi-plus-lg"></i> Zimmet Ver
+                </a>
+            </div>
+            @if (Model.Zimmetler.Any())
+            {
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Ürün</th>
+                            <th>MİKTAR</th>
+                            <th>Zimmet Tarihi</th>
+                            <th>İade Tarihi</th>
+                            <th>Durum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var z in Model.Zimmetler)
+                        {
+                            <tr>
+                                <td><strong>@(z.Malzeme?.Ad ?? "—")</strong></td>
+                                <td style="font-weight:700; color:#ef4444;">@z.ZimmetMiktari.ToString("0.##")</td>
+                                <td style="color:#64748b;font-size:13px;">@z.ZimmetTarihi.ToLocalTime().ToString("dd.MM.yyyy")
+                                </td>
+                                <td style="color:#64748b;font-size:13px;">@(z.IadeTarihi?.ToLocalTime().ToString("dd.MM.yyyy")
+                            ?? "—")</td>
+                                <td>
+                                    @if (z.Durum == "Aktif")
+                                    {
+                                        <span class="badge-aktif"><i class="bi bi-check-circle-fill"></i> Aktif</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-hurda"><i class="bi bi-arrow-return-left"></i> İade Edildi</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-clipboard" style="font-size:36px;opacity:0.3;display:block;margin-bottom:10px;"></i>
+                    <p>Bu personele henüz zimmet verilmemiş.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
