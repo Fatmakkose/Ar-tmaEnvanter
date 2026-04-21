@@ -41,7 +41,7 @@
             <tbody>
                 @foreach (var form in Model)
                 {
-                    // Formdaki herhangi bir ürünün stoðu yetersiz mi kontrol et
+                   
                     bool stokYetersiz = form.Satirlar.Any(s => s.Stok.Miktar < s.Miktar);
 
                     <tr>

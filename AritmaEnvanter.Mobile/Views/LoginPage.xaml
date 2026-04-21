@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AritmaEnvanter.Mobile.ViewModels"
+             x:Class="AritmaEnvanter.Mobile.Views.LoginPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="White">
+
+    <VerticalStackLayout Spacing="25" Padding="30" VerticalOptions="Center">
+        
+        <Image Source="dotnet_bot.png"
+               HeightRequest="120"
+               HorizontalOptions="Center" />
+
+        <Label Text="Arıtma Envanter"
+               FontSize="28"
+               FontAttributes="Bold"
+               TextColor="#1a5fae"
+               HorizontalOptions="Center" />
+
+        <Label Text="Devam etmek için giriş yapın"
+               FontSize="16"
+               TextColor="#6E6E6E"
+               HorizontalOptions="Center"
+               Margin="0,0,0,10" />
+
+        <Frame BackgroundColor="#F5F5F5" Padding="15,5" HasShadow="False" CornerRadius="10">
+            <Entry Placeholder="Email"
+                   Text="{Binding Email}"
+                   Keyboard="Email"
+                   TextColor="Black"
+                   PlaceholderColor="Gray" />
+        </Frame>
+
+        <Frame BackgroundColor="#F5F5F5" Padding="15,5" HasShadow="False" CornerRadius="10">
+            <Entry Placeholder="Şifre"
+                   Text="{Binding Password}"
+                   IsPassword="True"
+                   TextColor="Black"
+                   PlaceholderColor="Gray" />
+        </Frame>
+
+        <Button Text="GİRİŞ YAP"
+                Command="{Binding LoginCommand}"
+                BackgroundColor="#1a5fae"
+                TextColor="White"
+                FontAttributes="Bold"
+                HeightRequest="50"
+                CornerRadius="10"
+                Margin="0,10,0,0" />
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}" 
+                           IsVisible="{Binding IsBusy}"
+                           Color="#1a5fae" />
+
+    </VerticalStackLayout>
+
+</ContentPage>

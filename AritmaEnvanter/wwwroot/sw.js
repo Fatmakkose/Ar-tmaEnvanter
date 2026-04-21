@@ -1,6 +1,5 @@
 const cacheName = 'aritma-envanter-v1';
 const assets = [
-  '/',
   '/css/site.css',
   '/js/site.js',
   '/images/maskilogo.png'

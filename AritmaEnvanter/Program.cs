@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using AritmaEnvanter.Data;
 using AritmaEnvanter.Models.Entities;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,13 +31,25 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
-builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation().AddJsonOptions(options =>
+
+builder.Services.AddControllersWithViews(options =>
+{
+    var policy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+    options.Filters.Add(new AuthorizeFilter(policy));
+})
+.AddRazorRuntimeCompilation()
+.AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     options.JsonSerializerOptions.WriteIndented = true;
 });
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-XSRF-TOKEN");
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 
 builder.Services.AddAuthorization(options =>
@@ -67,12 +81,18 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 });
 
 // app.UseHttpsRedirection();
+app.UseCors("MobilePolicy");
 app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
-app.UseCors("MobilePolicy");
 app.UseAuthorization();
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Aritma Envanter API V1");
+});
 
 app.MapControllerRoute(
     name: "default",

@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AritmaEnvanter.Mobile.ViewModels"
+             xmlns:models="clr-namespace:AritmaEnvanter.Mobile.Models"
+             xmlns:converters="clr-namespace:AritmaEnvanter.Mobile.Converters"
+             x:Class="AritmaEnvanter.Mobile.Views.InventoryPage"
+             BackgroundImageSource="bg_mesh.png"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <converters:IntToBoolConverter x:Key="IntToBoolConverter" />
+        
+        <Style TargetType="Label" x:Key="HeaderLabel">
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid>
+        <!-- Main Layout -->
+        <Grid RowDefinitions="Auto, *">
+            
+            <!-- Premium Header with Gradient -->
+            <Border Grid.Row="0" StrokeThickness="0" HeightRequest="220" VerticalOptions="Start">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="0,0,40,40" />
+                </Border.StrokeShape>
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#003d7a" Offset="0.1" />
+                        <GradientStop Color="#0077b6" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
+
+                <Grid RowDefinitions="Auto, Auto, *" Padding="25,40,25,20" RowSpacing="15">
+                    <HorizontalStackLayout HorizontalOptions="Start" VerticalOptions="Start" Spacing="10">
+                        <Border WidthRequest="45" HeightRequest="45" StrokeShape="RoundRectangle 22.5" Padding="0">
+                            <Image Source="maskilogo.png" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="30" />
+                        </Border>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="ARITMA ENVANTER" FontSize="16" FontAttributes="Bold" TextColor="White" CharacterSpacing="1" />
+                            <Label Text="Stok Yönetim Sistemi" FontSize="10" TextColor="#BBE1FA" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+
+                    <Label Grid.Row="1" Text="Ürünler &amp; Stok Durumu" Style="{StaticResource HeaderLabel}" FontSize="24" />
+
+                    <!-- Quick Stats Dashboard -->
+                    <Grid Grid.Row="2" ColumnDefinitions="*, *, *" ColumnSpacing="12" Margin="0,5,0,0">
+                        <Border Grid.Column="0" BackgroundColor="#20FFFFFF" StrokeThickness="0" StrokeShape="RoundRectangle 16">
+                            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="2">
+                                <Label Text="{Binding CriticalCount}" TextColor="#FF4B2B" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" />
+                                <Label Text="KRİTİK" FontSize="9" TextColor="White" Opacity="0.8" HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" BackgroundColor="#20FFFFFF" StrokeThickness="0" StrokeShape="RoundRectangle 16">
+                            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="2">
+                                <Label Text="{Binding TodayEntryCount}" TextColor="#34C759" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" />
+                                <Label Text="GİRİŞ" FontSize="9" TextColor="White" Opacity="0.8" HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="2" BackgroundColor="#20FFFFFF" StrokeThickness="0" StrokeShape="RoundRectangle 16">
+                            <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="2">
+                                <Label Text="{Binding TodayExitCount}" TextColor="#FFE15D" FontSize="20" FontAttributes="Bold" HorizontalOptions="Center" />
+                                <Label Text="ÇIKIŞ" FontSize="9" TextColor="White" Opacity="0.8" HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Main Content Area -->
+            <RefreshView Grid.Row="1" IsRefreshing="{Binding IsRefreshing}" Command="{Binding LoadDataCommand}" Margin="0,-25,0,0">
+                <ScrollView BackgroundColor="Transparent">
+                    <VerticalStackLayout Padding="20,0,20,20" Spacing="20">
+                        
+                        <!-- Search and Main Actions -->
+                        <Grid RowDefinitions="Auto, Auto" RowSpacing="15">
+                            <!-- Search Bar -->
+                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 15" BackgroundColor="White" Padding="15,0">
+                                <Border.Shadow>
+                                    <Shadow Brush="Black" Offset="0,4" Radius="10" Opacity="0.05" />
+                                </Border.Shadow>
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <Label Grid.Column="0" Text="" FontFamily="FontAwesomeSolid" TextColor="#0077b6" VerticalOptions="Center" Margin="0,0,10,0" />
+                                    <Entry Grid.Column="1" Placeholder="Marka, ürün veya depo ara..." Text="{Binding SearchText}" BackgroundColor="Transparent" FontSize="14" HeightRequest="45" />
+                                </Grid>
+                            </Border>
+
+                            <!-- Action Buttons -->
+                            <Grid Grid.Row="1" ColumnDefinitions="*, *" ColumnSpacing="15">
+                                <Button Grid.Column="0" Text="STOK GİRİŞİ" Command="{Binding OpenEntryCommand}"
+                                        BackgroundColor="#003d7a" CornerRadius="15" HeightRequest="50" FontAttributes="Bold" CharacterSpacing="1" />
+                                <Button Grid.Column="1" Text="STOK ÇIKIŞI" Command="{Binding OpenExitCommand}"
+                                        BackgroundColor="White" TextColor="#003d7a" BorderColor="#003d7a" BorderWidth="1"
+                                        CornerRadius="15" HeightRequest="50" FontAttributes="Bold" CharacterSpacing="1" />
+                            </Grid>
+                        </Grid>
+
+                        <Label Text="Güncel Stok Listesi" FontSize="16" FontAttributes="Bold" TextColor="#003d7a" Margin="5,10,0,0" />
+
+                        <!-- Enhanced Stock Collection -->
+                        <CollectionView ItemsSource="{Binding Stocks}">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="models:LocalStockItem">
+                                    <Grid Padding="0,0,0,15">
+                                        <Border StrokeThickness="0" StrokeShape="RoundRectangle 20" BackgroundColor="White" Padding="18">
+                                            <Border.Shadow>
+                                                <Shadow Brush="Black" Offset="0,6" Radius="12" Opacity="0.06" />
+                                            </Border.Shadow>
+                                            <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="15">
+                                                <!-- Product Icon with Badge -->
+                                                <Grid Grid.Column="0" VerticalOptions="Start">
+                                                    <Border WidthRequest="55" HeightRequest="55" StrokeShape="RoundRectangle 15" BackgroundColor="#F0F7FF" StrokeThickness="0">
+                                                        <Image Source="{Binding IconSource}" WidthRequest="35" HeightRequest="35" HorizontalOptions="Center" VerticalOptions="Center" />
+                                                    </Border>
+                                                </Grid>
+
+                                                <!-- Product Details -->
+                                                <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                                    <Label Text="{Binding MaterialName}" FontSize="16" FontAttributes="Bold" TextColor="#333" />
+                                                    <HorizontalStackLayout Spacing="5">
+                                                        <Label Text="" FontFamily="FontAwesomeSolid" TextColor="#0077b6" FontSize="10" VerticalOptions="Center" />
+                                                        <Label Text="{Binding WarehouseName}" FontSize="11" TextColor="Gray" />
+                                                    </HorizontalStackLayout>
+                                                    <HorizontalStackLayout Spacing="5">
+                                                        <Label Text="" FontFamily="FontAwesomeSolid" TextColor="#0077b6" FontSize="10" VerticalOptions="Center" />
+                                                        <Label Text="{Binding LastUpdatedBy}" FontSize="11" TextColor="Gray" />
+                                                    </HorizontalStackLayout>
+                                                    <Label Text="{Binding FormattedDate, StringFormat='Güncelleme: {0}'}" FontSize="10" TextColor="#999" Margin="0,2,0,0" />
+                                                </VerticalStackLayout>
+
+                                                <!-- Quantity and Status -->
+                                                <VerticalStackLayout Grid.Column="2" HorizontalOptions="End" VerticalOptions="Center" Spacing="5">
+                                                    <HorizontalStackLayout HorizontalOptions="End" Spacing="2">
+                                                        <Label Text="{Binding Quantity}" FontSize="22" FontAttributes="Bold" TextColor="#003d7a" />
+                                                        <Label Text="{Binding Unit}" FontSize="10" TextColor="Gray" VerticalOptions="End" Margin="0,0,0,4" />
+                                                    </HorizontalStackLayout>
+                                                    <Border BackgroundColor="{Binding StatusColor}" Padding="10,4" StrokeShape="RoundRectangle 10" StrokeThickness="0" HorizontalOptions="End">
+                                                        <Label Text="{Binding CriticalStatus}" FontSize="9" TextColor="White" FontAttributes="Bold" />
+                                                    </Border>
+                                                </VerticalStackLayout>
+                                            </Grid>
+                                        </Border>
+                                        <Grid.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:InventoryViewModel}}, Path=SelectStockCommand}" CommandParameter="{Binding .}" />
+                                        </Grid.GestureRecognizers>
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </VerticalStackLayout>
+                </ScrollView>
+            </RefreshView>
+        </Grid>
+
+        <!-- Operation Bottom-Sheet Overlay -->
+        <Grid BackgroundColor="#AA000000" IsVisible="{Binding IsOperationVisible}">
+            <Border VerticalOptions="End" 
+                    BackgroundColor="#F8F9FD" 
+                    HeightRequest="700" 
+                    StrokeShape="RoundRectangle 35,35,0,0"
+                    Padding="25">
+                <Grid RowDefinitions="Auto, *, Auto">
+                    <!-- Pull Bar Decorator -->
+                    <Border Grid.Row="0" HorizontalOptions="Center" WidthRequest="40" HeightRequest="5" BackgroundColor="#DDD" StrokeShape="RoundRectangle 2.5" Margin="0,0,0,20" />
+                    
+                    <!-- Header -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,10">
+                        <Label Text="{Binding OperationTitle}" FontSize="22" FontAttributes="Bold" TextColor="#003d7a" VerticalOptions="Center" />
+                        <Border Grid.Column="1" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" BackgroundColor="#EEE" StrokeThickness="0">
+                            <Label Text="✕" FontSize="18" TextColor="Gray" HorizontalOptions="Center" VerticalOptions="Center" />
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding CloseOperationCommand}" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </Grid>
+
+                    <!-- Content -->
+                    <ScrollView Grid.Row="1" Margin="0,10">
+                        <VerticalStackLayout Spacing="18">
+                            
+                            <!-- Searchable Material Picker -->
+                            <VerticalStackLayout Spacing="6" IsVisible="{Binding IsEntry}">
+                                <Label Text="Malzeme Ara ve Seç" FontSize="12" FontAttributes="Bold" TextColor="#666" Margin="2,0" />
+                                <Border StrokeThickness="1" Stroke="#DDD" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15,0">
+                                    <Entry Placeholder="Malzeme adını buraya yazın..." 
+                                           Text="{Binding MaterialSearchText}" 
+                                           FontSize="14" HeightRequest="50" />
+                                </Border>
+                                
+                                <!-- Search Results Dropdown -->
+                                <Border IsVisible="{Binding IsMaterialListVisible}" 
+                                        BackgroundColor="White" 
+                                        Stroke="#DDD" 
+                                        StrokeThickness="1" 
+                                        StrokeShape="RoundRectangle 12" 
+                                        MaximumHeightRequest="200"
+                                        Margin="0,2,0,0">
+                                    <CollectionView ItemsSource="{Binding FilteredMaterials}">
+                                        <CollectionView.ItemTemplate>
+                                            <DataTemplate x:DataType="models:MetadataItem">
+                                                <VerticalStackLayout Padding="15" Spacing="2">
+                                                    <Label Text="{Binding .}" FontSize="14" TextColor="#333" FontAttributes="Bold" />
+                                                    <BoxView HeightRequest="1" Color="#F0F0F0" Margin="0,10,0,0" />
+                                                    <VerticalStackLayout.GestureRecognizers>
+                                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:InventoryViewModel}}, Path=SelectMaterialCommand}" CommandParameter="{Binding .}" />
+                                                    </VerticalStackLayout.GestureRecognizers>
+                                                </VerticalStackLayout>
+                                            </DataTemplate>
+                                        </CollectionView.ItemTemplate>
+                                    </CollectionView>
+                                </Border>
+
+                                <!-- Seçili Ürün Bilgisi -->
+                                <Border IsVisible="{Binding SelectedMaterial, Converter={x:Static converters:NotNullToBoolConverter.Instance}}" 
+                                        BackgroundColor="#E3F2FD" StrokeThickness="0" Padding="15,10" StrokeShape="RoundRectangle 8">
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Label Text="check-circle" FontFamily="FontAwesomeSolid" TextColor="#0077b6" VerticalOptions="Center" />
+                                        <Label Text="Seçildi:" FontSize="12" TextColor="#0077b6" FontAttributes="Bold" VerticalOptions="Center" />
+                                        <Label Text="{Binding SelectedMaterial}" FontSize="12" TextColor="#0077b6" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+                                </Border>
+                            </VerticalStackLayout>
+
+                            <!-- Exit Info Card -->
+                            <Border IsVisible="{Binding IsExit}" BackgroundColor="#FFFEE3" Stroke="#FFE082" StrokeThickness="1" Padding="15" StrokeShape="RoundRectangle 12">
+                                <Grid ColumnDefinitions="Auto, *">
+                                    <Border Grid.Column="0" WidthRequest="45" HeightRequest="45" StrokeShape="RoundRectangle 10" BackgroundColor="White" StrokeThickness="0">
+                                        <Image Source="{Binding TargetStock.IconSource}" WidthRequest="25" />
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" Margin="15,0,0,0" VerticalOptions="Center">
+                                        <Label Text="{Binding TargetStock.MaterialName}" FontAttributes="Bold" TextColor="#856404" />
+                                        <Label Text="{Binding TargetStock.Quantity, StringFormat='Mevcut Stok: {0}'}" FontSize="12" TextColor="#856404" Opacity="0.8" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+
+                            <!-- Miktar Stepper Entry (Only for Entry) -->
+                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="15" IsVisible="{Binding IsEntry}">
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="İşlem Miktarı" FontSize="12" FontAttributes="Bold" TextColor="#666" Margin="2,0" />
+                                    <Border StrokeThickness="1" Stroke="#DDD" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15,0">
+                                        <Entry Text="{Binding OperationAmount}" Keyboard="Numeric" FontSize="18" FontAttributes="Bold" HeightRequest="55" />
+                                    </Border>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" HorizontalOptions="Start" VerticalOptions="End" Margin="0,0,0,5">
+                                    <Label Text="{Binding OperationUnit}" FontSize="14" FontAttributes="Bold" TextColor="#003d7a" />
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <!-- Warehouse & Shelf -->
+                            <VerticalStackLayout Spacing="15" IsVisible="{Binding IsEntry}">
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="Hedef Depo" FontSize="12" FontAttributes="Bold" TextColor="#666" Margin="2,0" />
+                                    <Border StrokeThickness="1" Stroke="#DDD" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="10,0">
+                                        <Picker ItemsSource="{Binding Warehouses}" SelectedItem="{Binding SelectedWarehouse}" ItemDisplayBinding="{Binding Ad}" FontSize="14" HeightRequest="50" Title="Seçin..." />
+                                    </Border>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="Raf Seçin" FontSize="12" FontAttributes="Bold" TextColor="#666" Margin="2,0" />
+                                    <Border StrokeThickness="1" Stroke="#DDD" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="10,0">
+                                        <Picker ItemsSource="{Binding Shelves}" SelectedItem="{Binding SelectedShelf}" ItemDisplayBinding="{Binding Ad}" FontSize="14" HeightRequest="50" Title="Seçin..." />
+                                    </Border>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+
+                            <!-- Raf No & Firma -->
+                            <VerticalStackLayout Spacing="15" IsVisible="{Binding IsEntry}">
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="Raf No" FontSize="12" FontAttributes="Bold" TextColor="#666" Margin="2,0" />
+                                    <Border StrokeThickness="1" Stroke="#DDD" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15,0">
+                                        <Entry Text="{Binding RafNo}" Placeholder="Örn: A-1" FontSize="14" HeightRequest="50" />
+                                    </Border>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="Firma (Gönderen)" FontSize="12" FontAttributes="Bold" TextColor="#666" Margin="2,0" />
+                                    <Border StrokeThickness="1" Stroke="#DDD" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="10,0">
+                                        <Picker ItemsSource="{Binding Companies}" SelectedItem="{Binding SelectedCompany}" ItemDisplayBinding="{Binding FirmaAdi}" FontSize="14" HeightRequest="50" Title="Firma Seç..." />
+                                    </Border>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+
+                            <!-- Dynamic Fields -->
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding DynamicFields}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="models:FormAlan">
+                                        <VerticalStackLayout Spacing="6" Margin="0,0,0,10">
+                                            <Label Text="{Binding AlanAdi}" FontSize="12" FontAttributes="Bold" TextColor="#666" Margin="2,0" />
+                                            <Border StrokeThickness="1" Stroke="#DDD" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15,0">
+                                                <Grid>
+                                                    <Entry Text="{Binding Value}" FontSize="14" HeightRequest="50" IsVisible="{Binding Options.Count, Converter={StaticResource IntToBoolConverter}, ConverterParameter=invert}" />
+                                                    <Picker ItemsSource="{Binding Options}" SelectedItem="{Binding Value}" FontSize="14" HeightRequest="50" IsVisible="{Binding Options.Count, Converter={StaticResource IntToBoolConverter}}" />
+                                                </Grid>
+                                            </Border>
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+
+                             <!-- BULK EXIT UI -->
+                            <VerticalStackLayout Spacing="15" IsVisible="{Binding IsExit}">
+                                <!-- 1. Product Search for Exit (NOW TOP) -->
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="Çıkış Yapılacak Ürünü Seçin" FontSize="12" FontAttributes="Bold" TextColor="#666" Margin="2,0" />
+                                    <Border StrokeThickness="1" Stroke="#DDD" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15,0">
+                                        <Entry Placeholder="Ürün ara..." Text="{Binding ExitMaterialSearchText}" FontSize="14" HeightRequest="50" />
+                                    </Border>
+
+                                    <!-- Available Stocks Dropdown -->
+                                    <Border IsVisible="{Binding ExitAvailableStocks.Count, Converter={StaticResource IntToBoolConverter}}" 
+                                            BackgroundColor="White" Stroke="#DDD" StrokeThickness="1" StrokeShape="RoundRectangle 12" MaximumHeightRequest="150"
+                                            ZIndex="10">
+                                        <CollectionView ItemsSource="{Binding ExitAvailableStocks}">
+                                            <CollectionView.ItemTemplate>
+                                                <DataTemplate x:DataType="models:LocalStockItem">
+                                                    <Grid Padding="15,10" ColumnDefinitions="*, Auto">
+                                                        <VerticalStackLayout Grid.Column="0">
+                                                            <Label Text="{Binding MaterialName}" FontAttributes="Bold" FontSize="13" />
+                                                            <Label Text="{Binding WarehouseName, StringFormat='Depo: {0}'}" FontSize="11" TextColor="Gray" />
+                                                        </VerticalStackLayout>
+                                                        <Label Grid.Column="1" Text="{Binding Quantity, StringFormat='{0} Adet'}" TextColor="#0077b6" FontAttributes="Bold" VerticalOptions="Center" />
+                                                        <Grid.GestureRecognizers>
+                                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:InventoryViewModel}}, Path=SelectExitStockCommand}" CommandParameter="{Binding .}" />
+                                                        </Grid.GestureRecognizers>
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </CollectionView.ItemTemplate>
+                                        </CollectionView>
+                                    </Border>
+                                </VerticalStackLayout>
+
+                                <!-- 2. Selection Details (Amount, Type, Personnel) -->
+                                <Border IsVisible="{Binding TargetStock, Converter={x:Static converters:NotNullToBoolConverter.Instance}}" 
+                                        Padding="20" BackgroundColor="#F0F7FF" Stroke="#BEE3F8" StrokeThickness="1" StrokeShape="RoundRectangle 20" Margin="0,5">
+                                    <VerticalStackLayout Spacing="15">
+                                        <HorizontalStackLayout Spacing="10">
+                                            <Border WidthRequest="35" HeightRequest="35" StrokeShape="RoundRectangle 8" BackgroundColor="White" StrokeThickness="0">
+                                                <Image Source="{Binding TargetStock.IconSource}" WidthRequest="20" />
+                                            </Border>
+                                            <VerticalStackLayout VerticalOptions="Center">
+                                                <Label Text="{Binding TargetStock.MaterialName}" FontAttributes="Bold" TextColor="#003d7a" FontSize="14" />
+                                                <Label Text="{Binding TargetStock.Quantity, StringFormat='Mevcut: {0}'}" FontSize="11" TextColor="#2B6CB0" />
+                                            </VerticalStackLayout>
+                                        </HorizontalStackLayout>
+
+                                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="12">
+                                            <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                                <Label Text="Çıkış Miktarı" FontSize="11" TextColor="#4A5568" FontAttributes="Bold" />
+                                                <Border StrokeThickness="1" Stroke="#CBD5E0" BackgroundColor="White" StrokeShape="RoundRectangle 10" Padding="12,0">
+                                                    <Entry Text="{Binding OperationAmount}" Keyboard="Numeric" Placeholder="0" HeightRequest="45" FontSize="16" FontAttributes="Bold" />
+                                                </Border>
+                                            </VerticalStackLayout>
+                                            <Label Grid.Column="1" Text="{Binding OperationUnit}" VerticalOptions="End" Margin="0,0,0,12" FontAttributes="Bold" TextColor="#4A5568" />
+                                        </Grid>
+
+                                        <HorizontalStackLayout Spacing="15">
+                                            <VerticalStackLayout Spacing="4" WidthRequest="120">
+                                                <Label Text="Çıkış Türü" FontSize="11" TextColor="#4A5568" FontAttributes="Bold" />
+                                                <Border StrokeThickness="1" Stroke="#CBD5E0" BackgroundColor="White" StrokeShape="RoundRectangle 10">
+                                                    <Picker SelectedItem="{Binding ExitType}" HeightRequest="45" FontSize="13">
+                                                        <Picker.ItemsSource>
+                                                            <x:Array Type="{x:Type x:String}">
+                                                                <x:String>Sarf</x:String>
+                                                                <x:String>Demirbaş</x:String>
+                                                            </x:Array>
+                                                        </Picker.ItemsSource>
+                                                    </Picker>
+                                                </Border>
+                                            </VerticalStackLayout>
+
+                                            <VerticalStackLayout Spacing="4" HorizontalOptions="FillAndExpand" IsVisible="{Binding IsDemirbas}">
+                                                <Label Text="Personel" FontSize="11" TextColor="#4A5568" FontAttributes="Bold" />
+                                                <Border StrokeThickness="1" Stroke="#CBD5E0" BackgroundColor="White" StrokeShape="RoundRectangle 10">
+                                                    <Picker ItemsSource="{Binding Personnel}" SelectedItem="{Binding SelectedPersonnel}"
+                                                            ItemDisplayBinding="{Binding AdSoyad}" HeightRequest="45" FontSize="13" Title="Seçin..." />
+                                                </Border>
+                                            </VerticalStackLayout>
+                                        </HorizontalStackLayout>
+
+                                        <Button Text="SEPETE EKLE" Command="{Binding AddToBasketCommand}" 
+                                                BackgroundColor="#0077b6" TextColor="White" HeightRequest="50" CornerRadius="12" FontAttributes="Bold" Margin="0,5,0,0" />
+                                    </VerticalStackLayout>
+                                </Border>
+
+                                <!-- 3. Exit Basket List -->
+                                <VerticalStackLayout Spacing="10" IsVisible="{Binding ExitBasket.Count, Converter={StaticResource IntToBoolConverter}}" Margin="0,10,0,0">
+                                    <Label Text="Sepettekiler" FontAttributes="Bold" TextColor="#003d7a" FontSize="14" />
+                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding ExitBasket}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="models:ExitCartItem">
+                                                <Border StrokeThickness="0" Padding="15" Margin="0,0,0,10" StrokeShape="RoundRectangle 15" BackgroundColor="White">
+                                                    <Border.Shadow>
+                                                        <Shadow Brush="Black" Offset="0,2" Radius="5" Opacity="0.05" />
+                                                    </Border.Shadow>
+                                                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                                                        <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                                            <Label Text="{Binding Stock.MaterialName}" FontAttributes="Bold" FontSize="14" />
+                                                            <HorizontalStackLayout Spacing="10">
+                                                                <Label Text="{Binding Amount, StringFormat='{0} Adet'}" FontSize="12" TextColor="#0077b6" FontAttributes="Bold" />
+                                                                <Label Text="{Binding ExitType}" FontSize="12" TextColor="Gray" />
+                                                            </HorizontalStackLayout>
+                                                        </VerticalStackLayout>
+                                                        <Button Grid.Column="1" Text="" FontFamily="FontAwesomeSolid" FontSize="18" TextColor="#E53E3E" BackgroundColor="Transparent" 
+                                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:InventoryViewModel}}, Path=RemoveFromBasketCommand}" 
+                                                                CommandParameter="{Binding .}" WidthRequest="40" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Spacing="6">
+                                <Label Text="Açıklama / Not" FontSize="12" FontAttributes="Bold" TextColor="#666" Margin="2,0" />
+                                <Border StrokeThickness="1" Stroke="#DDD" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15,5">
+                                    <Editor Text="{Binding OperationNote}" AutoSize="TextChanges" FontSize="14" Placeholder="İşlem ile ilgili notlar..." MinimumHeightRequest="80" />
+                                </Border>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </ScrollView>
+
+                    <!-- Footer Action -->
+                    <Grid Grid.Row="2" ColumnDefinitions="*, *" ColumnSpacing="15" Padding="0,15,0,0">
+                        <Button Grid.Column="0" Text="İPTAL" Command="{Binding CloseOperationCommand}" BackgroundColor="#EEE" TextColor="#666" CornerRadius="15" HeightRequest="55" FontAttributes="Bold" />
+                        <Button Grid.Column="1" Text="İŞLEMİ KAYDET" Command="{Binding SaveOperationCommand}" BackgroundColor="#003d7a" TextColor="White" CornerRadius="15" HeightRequest="55" FontAttributes="Bold" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

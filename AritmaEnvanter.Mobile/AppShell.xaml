@@ -3,13 +3,40 @@
     x:Class="AritmaEnvanter.Mobile.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:AritmaEnvanter.Mobile"
-    Shell.FlyoutBehavior="Flyout"
-    Title="AritmaEnvanter.Mobile">
+    xmlns:views="clr-namespace:AritmaEnvanter.Mobile.Views"
+    Shell.FlyoutBehavior="Disabled"
+    Title="Arıtma Envanter">
 
+    <!-- Login Page (No Tabs) -->
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        Title="Giriş"
+        ContentTemplate="{DataTemplate views:LoginPage}"
+        Route="Login"
+        Shell.TabBarIsVisible="False"
+        Shell.NavBarIsVisible="False" />
+
+    <!-- Main Navigation with Tabs -->
+    <TabBar>
+        <Tab Title="Ürünler" Icon="dotnet_bot.png">
+            <ShellContent
+                Title="Ürün Listesi"
+                ContentTemplate="{DataTemplate views:InventoryPage}"
+                Route="Stoklar" />
+        </Tab>
+        
+        <Tab Title="Hareketler" Icon="dotnet_bot.png">
+            <ShellContent
+                Title="İşlem Geçmişi"
+                ContentTemplate="{DataTemplate views:MovementsPage}"
+                Route="Hareketler" />
+        </Tab>
+
+        <Tab Title="Talepler" Icon="dotnet_bot.png">
+            <ShellContent
+                Title="Talepler"
+                ContentTemplate="{DataTemplate views:RequestPage}"
+                Route="Talepler" />
+        </Tab>
+    </TabBar>
 
 </Shell>

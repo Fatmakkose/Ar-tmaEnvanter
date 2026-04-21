@@ -158,11 +158,9 @@
             <div class="main-wrap">
 
                 @* *@
-                <div class="topbar" style="z-index: 9999 !important;">
-                    <div class="topbar-left d-flex align-items-center" style="position: relative; z-index: 10000;">
-                        <button type="button" class="topbar-btn d-md-none me-2" onclick="toggleSidebar()" style="display: flex !important;">
-                            <i class="bi bi-list" style="font-size: 24px;"></i>
-                        </button>
+                <div class="topbar" style="z-index: 100 !important;">
+                    <div class="topbar-left d-flex align-items-center" style="position: relative;">
+                        
                         <div class="topbar-title">
                             <i class="bi bi-droplet me-2" style="color:#00a8e8;"></i>
                             <span class="d-none d-sm-inline">@(ViewData["Title"] as string ?? "AritmaEnvanter")</span>

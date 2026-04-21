@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AritmaEnvanter.Mobile.ViewModels"
+             xmlns:models="clr-namespace:AritmaEnvanter.Mobile.Models"
+             x:Class="AritmaEnvanter.Mobile.Views.MovementsPage"
+             Title="Stok Hareketleri"
+             BackgroundColor="#F0F2F5">
+
+    <Grid RowDefinitions="Auto, *">
+        
+        <!-- Filter Header -->
+        <Border Grid.Row="0" BackgroundColor="White" Padding="15" StrokeThickness="0" Margin="0,0,0,10">
+            <VerticalStackLayout Spacing="10">
+                <Grid ColumnDefinitions="*, *" ColumnSpacing="10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Başlangıç" FontSize="10" TextColor="Gray" />
+                        <DatePicker Date="{Binding StartDate}" Format="dd.MM.yyyy" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                        <Label Text="Bitiş" FontSize="10" TextColor="Gray" />
+                        <DatePicker Date="{Binding EndDate}" Format="dd.MM.yyyy" />
+                    </VerticalStackLayout>
+                </Grid>
+                
+                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                    <Border Grid.Column="0" StrokeShape="RoundRectangle 8" Padding="10,0">
+                        <Picker ItemsSource="{Binding FilterTypes}" SelectedItem="{Binding SelectedType}" />
+                    </Border>
+                    <Button Grid.Column="1" Text="FİLTRELE" Command="{Binding ApplyFilterCommand}" 
+                            BackgroundColor="#1a5fae" CornerRadius="8" HeightRequest="40" />
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Movement List -->
+        <RefreshView Grid.Row="1" IsRefreshing="{Binding IsRefreshing}" Command="{Binding LoadMovementsCommand}">
+            <CollectionView ItemsSource="{Binding Movements}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:MovementItem">
+                        <Grid Padding="15,5">
+                            <Border BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="15">
+                                <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="15">
+                                    
+                                    <!-- Status Icon -->
+                                    <Border Grid.Column="0" 
+                                            BackgroundColor="{Binding StatusColor}" 
+                                            WidthRequest="40" HeightRequest="40" 
+                                            StrokeShape="RoundRectangle 20">
+                                        <Label Text="{Binding TransactionType}" 
+                                               TextColor="White" 
+                                               HorizontalOptions="Center" VerticalOptions="Center" 
+                                               FontAttributes="Bold" FontSize="10" />
+                                    </Border>
+
+                                    <!-- Content -->
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                        <Label Text="{Binding MaterialName}" FontAttributes="Bold" FontSize="15" />
+                                        <Label Text="{Binding WarehouseName}" FontSize="11" TextColor="Gray" />
+                                        <Label Text="{Binding User, StringFormat='Yapan: {0}'}" FontSize="10" TextColor="#1a5fae" />
+                                    </VerticalStackLayout>
+
+                                    <!-- Amount & Date -->
+                                    <VerticalStackLayout Grid.Column="2" HorizontalOptions="End" VerticalOptions="Center">
+                                        <Label Text="{Binding DisplayAmount}" 
+                                               TextColor="{Binding StatusColor}" 
+                                               FontAttributes="Bold" FontSize="14" 
+                                               HorizontalOptions="End" />
+                                        <Label Text="{Binding Date}" FontSize="10" TextColor="Gray" HorizontalOptions="End" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="10">
+                        <Label Text="Hareket bulunamadı." TextColor="Gray" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

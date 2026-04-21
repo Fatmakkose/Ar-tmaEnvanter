@@ -1,11 +1,10 @@
-using AritmaEnvanter.Data;
+ï»¿using AritmaEnvanter.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using AritmaEnvanter.Models.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using AritmaEnvanter.Models.ViewModels;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AritmaEnvanter.Controllers
 {
@@ -24,10 +23,11 @@ namespace AritmaEnvanter.Controllers
             _db = db;
         }
 
-        
+        [AllowAnonymous]
         public IActionResult Login() => View();
 
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string email, string password, bool beniHatirla = false)
         {
@@ -35,13 +35,15 @@ namespace AritmaEnvanter.Controllers
             if (result.Succeeded)
                 return RedirectToAction("Index", "Home");
 
-            ModelState.AddModelError("", "Email veya þifre hatalý.");
+            ModelState.AddModelError("", "Email veya ÅŸifre hatalÄ±.");
             return View();
         }
-        
+
+        [AllowAnonymous]
         public IActionResult Kayit() => View();
 
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Kayit(string adSoyad, string email, string password)
         {
@@ -63,17 +65,15 @@ namespace AritmaEnvanter.Controllers
             return View();
         }
 
-        
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
         }
 
-        
+        [AllowAnonymous]
         public IActionResult AccessDenied() => View();
 
-        
         [Authorize]
         public async Task<IActionResult> Profil()
         {
@@ -92,13 +92,6 @@ namespace AritmaEnvanter.Controllers
                 Rol = string.Join(", ", roles)
             };
 
-            if (int.TryParse(districtId, out int bId))
-                model.BirimAd = (await (null as dynamic))?.Ad;
-
-            if (int.TryParse(warehouseId, out int dId))
-                model.DepoAd = (await (null as dynamic))?.Ad;
-
-            
             var personel = await _db.Personeller.FirstOrDefaultAsync(p => p.Email == user.Email);
             if (personel != null)
             {
@@ -109,7 +102,6 @@ namespace AritmaEnvanter.Controllers
                     .ToListAsync();
             }
 
-            
             model.Taleplerim = await _db.TransferTalepler
                 .Include(t => t.KaynakDepo)
                 .Include(t => t.HedefDepo)
@@ -132,7 +124,6 @@ namespace AritmaEnvanter.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            
             user.AdSoyad = model.AdSoyad;
             user.Email = model.Email;
             user.UserName = model.Email;
@@ -145,12 +136,11 @@ namespace AritmaEnvanter.Controllers
                 return View(model);
             }
 
-            
             if (!string.IsNullOrEmpty(model.NewPassword))
             {
                 if (string.IsNullOrEmpty(model.CurrentPassword))
                 {
-                    ModelState.AddModelError("CurrentPassword", "Þifre deðiþtirmek için mevcut þifrenizi girmelisiniz.");
+                    ModelState.AddModelError("CurrentPassword", "Åžifre deÄŸiÅŸtirmek iÃ§in mevcut ÅŸifrenizi girmelisiniz.");
                     return View(model);
                 }
 
@@ -164,9 +154,8 @@ namespace AritmaEnvanter.Controllers
             }
 
             await _signInManager.RefreshSignInAsync(user);
-            TempData["SuccessMessage"] = "Profiliniz baþarýyla güncellendi.";
+            TempData["SuccessMessage"] = "Profiliniz baÅŸarÄ±yla gÃ¼ncellendi.";
             return RedirectToAction("Profil");
         }
     }
 }
-
