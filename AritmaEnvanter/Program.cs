@@ -27,7 +27,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
     options.AccessDeniedPath = "/Account/AccessDenied";
-    options.Cookie.SameSite = SameSiteMode.Lax; // Mobil tarayıcılar için daha uyumlu
+    options.Cookie.SameSite = SameSiteMode.Lax; 
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 

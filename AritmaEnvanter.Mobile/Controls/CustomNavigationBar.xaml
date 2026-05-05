@@ -1,0 +1,72 @@
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AritmaEnvanter.Mobile.Controls.CustomNavigationBar">
+
+    <Border BackgroundColor="#FFFFFF"
+            Padding="10,8,10,12"
+            HorizontalOptions="Fill" 
+            VerticalOptions="End" 
+            HeightRequest="98"
+            Stroke="#CFE0FC"
+            StrokeThickness="1">
+        <Border.StrokeShape>
+            <RoundRectangle CornerRadius="26,26,0,0" />
+        </Border.StrokeShape>
+        <Border.Shadow>
+            <Shadow Brush="#9EBBEE" Offset="0,-4" Radius="16" Opacity="0.28" />
+        </Border.Shadow>
+
+        <Grid RowDefinitions="Auto,*" ColumnDefinitions="*, *, *" HorizontalOptions="Fill">
+            <BoxView Grid.Row="0" Grid.ColumnSpan="3" HeightRequest="1" Color="#EAF1FF" Margin="8,0,8,6" />
+            
+            <!-- Ürünler -->
+            <Grid Grid.Row="1" Grid.Column="0" RowDefinitions="4, *" RowSpacing="0">
+                <BoxView x:Name="ProductsIndicator" Grid.Row="0" WidthRequest="32" HeightRequest="3" Color="#2E67D1" CornerRadius="2" HorizontalOptions="Center" IsVisible="False" VerticalOptions="Start" />
+                <Border x:Name="ProductsContainer" Grid.Row="1" StrokeThickness="0" BackgroundColor="Transparent" StrokeShape="RoundRectangle 16" Padding="0,9">
+                <VerticalStackLayout VerticalOptions="Center" Spacing="3">
+                    <Path x:Name="ProductsIcon" 
+                          Data="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.08-.33.12-.51.12s-.35-.04-.51-.12l-7.9-4.44c-.32-.17-.53-.5-.53-.88v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.08.33-.12.51-.12s.35.04.51.12l7.9 4.44c.32.17.53.5.53.88v9zM12 4.15L6.04 7.5 12 10.85l5.96-3.35L12 4.15zM5 15.91l6 3.38v-6.71L5 9.21v6.7zm14 0v-6.7l-6 3.37v6.71l6-3.38z" 
+                          Fill="#7C8FAE" HorizontalOptions="Center" Scale="1.2" />
+                    <Label x:Name="ProductsText" Text="Ürünler" FontSize="11" HorizontalOptions="Center" TextColor="#7C8FAE" />
+                </VerticalStackLayout>
+                </Border>
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnItemTapped" CommandParameter="Stoklar" />
+                </Grid.GestureRecognizers>
+            </Grid>
+
+            <!-- Hareketler -->
+            <Grid Grid.Row="1" Grid.Column="1" RowDefinitions="4, *" RowSpacing="0">
+                <BoxView x:Name="MovementsIndicator" Grid.Row="0" WidthRequest="32" HeightRequest="3" Color="#2E67D1" CornerRadius="2" HorizontalOptions="Center" IsVisible="False" VerticalOptions="Start" />
+                <Border x:Name="MovementsContainer" Grid.Row="1" StrokeThickness="0" BackgroundColor="Transparent" StrokeShape="RoundRectangle 16" Padding="0,9">
+                <VerticalStackLayout VerticalOptions="Center" Spacing="3">
+                    <Path x:Name="MovementsIcon" 
+                          Data="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" 
+                          Fill="#7C8FAE" HorizontalOptions="Center" Scale="1.2" />
+                    <Label x:Name="MovementsText" Text="Hareketler" FontSize="11" HorizontalOptions="Center" TextColor="#7C8FAE" />
+                </VerticalStackLayout>
+                </Border>
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnItemTapped" CommandParameter="Hareketler" />
+                </Grid.GestureRecognizers>
+            </Grid>
+
+            <!-- Talepler -->
+            <Grid Grid.Row="1" Grid.Column="2" RowDefinitions="4, *" RowSpacing="0">
+                <BoxView x:Name="RequestsIndicator" Grid.Row="0" WidthRequest="32" HeightRequest="3" Color="#2E67D1" CornerRadius="2" HorizontalOptions="Center" IsVisible="False" VerticalOptions="Start" />
+                <Border x:Name="RequestsContainer" Grid.Row="1" StrokeThickness="0" BackgroundColor="Transparent" StrokeShape="RoundRectangle 16" Padding="0,9">
+                <VerticalStackLayout VerticalOptions="Center" Spacing="3">
+                    <Path x:Name="RequestsIcon" 
+                          Data="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-8-2h2v-4h4v-2h-4V7h-2v4H7v2h4z" 
+                          Fill="#7C8FAE" HorizontalOptions="Center" Scale="1.2" />
+                    <Label x:Name="RequestsText" Text="Talepler" FontSize="11" HorizontalOptions="Center" TextColor="#7C8FAE" />
+                </VerticalStackLayout>
+                </Border>
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnItemTapped" CommandParameter="Talepler" />
+                </Grid.GestureRecognizers>
+            </Grid>
+
+        </Grid>
+    </Border>
+</ContentView>

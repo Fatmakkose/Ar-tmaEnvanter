@@ -17,7 +17,7 @@ namespace AritmaEnvanter.Mobile.ViewModels
         [ObservableProperty] DateTime startDate = DateTime.Now.AddDays(-30);
         [ObservableProperty] DateTime endDate = DateTime.Now;
 
-        public List<string> FilterTypes { get; } = new() { "Hepsi", "GİR", "ÇIK" };
+        public List<string> FilterTypes { get; } = new() { "Hepsi", "GİR", "ÇIK", "İADE" };
 
         public MovementsViewModel(ApiService apiService)
         {
@@ -33,7 +33,8 @@ namespace AritmaEnvanter.Mobile.ViewModels
             try
             {
                 IsBusy = true;
-                string typeFilter = SelectedType == "Hepsi" ? "" : SelectedType;
+
+                string typeFilter = SelectedType == "Hepsi" ? "" : (SelectedType == "İADE" ? "IAD" : SelectedType);
                 
                 var results = await _apiService.GetMovementsAsync(
                     typeFilter, 

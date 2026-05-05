@@ -5,7 +5,7 @@ namespace AritmaEnvanter.Mobile.Services
 {
     public class DatabaseService
     {
-        private SQLiteAsyncConnection _database;
+        private SQLiteAsyncConnection? _database;
 
         public DatabaseService()
         {
@@ -26,13 +26,13 @@ namespace AritmaEnvanter.Mobile.Services
         public async Task<List<LocalStockItem>> GetStocksAsync()
         {
             await Init();
-            return await _database.Table<LocalStockItem>().ToListAsync();
+            return await _database!.Table<LocalStockItem>().ToListAsync();
         }
 
         public async Task SaveStocksAsync(List<LocalStockItem> items)
         {
             await Init();
-            await _database.RunInTransactionAsync((SQLiteConnection conn) =>
+            await _database!.RunInTransactionAsync((SQLiteConnection conn) =>
             {
                 conn.DeleteAll<LocalStockItem>();
                 foreach (var item in items)
@@ -45,7 +45,7 @@ namespace AritmaEnvanter.Mobile.Services
         public async Task ClearAllDataAsync()
         {
             await Init();
-            await _database.DeleteAllAsync<LocalStockItem>();
+            await _database!.DeleteAllAsync<LocalStockItem>();
         }
     }
 }

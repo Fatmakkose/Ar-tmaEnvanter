@@ -65,9 +65,9 @@ namespace AritmaEnvanter.Controllers
                 {
                     Id = s.Id,
                     MalzemeId = s.MalzemeId,
-                    MaterialName = s.Malzeme != null ? s.Malzeme.Ad : "Bilinmeyen Malzeme",
+                    MaterialName = !string.IsNullOrEmpty(s.UrunAdi) ? s.UrunAdi : (s.Malzeme != null ? s.Malzeme.Ad : "Bilinmeyen Malzeme"),
                     WarehouseName = s.Depo != null ? s.Depo.Ad : "Bilinmeyen Depo",
-                    ShelfName = s.RafTanim != null ? s.RafTanim.Ad : (s.RafNo ?? "-"),
+                    ShelfName = !string.IsNullOrEmpty(s.RafNo) ? s.RafNo : (s.RafTanim != null ? s.RafTanim.Ad : "-"),
                     Quantity = s.Miktar,
                     Unit = s.Birim ?? (s.Malzeme != null && s.Malzeme.Birim != null ? s.Malzeme.Birim.Ad : "Adet"),
                     LastUpdatedBy = s.IslemYapanKisi ?? "Sistem",
@@ -198,6 +198,63 @@ namespace AritmaEnvanter.Controllers
 
             return Ok(new { success = true, message = $"Talep oluşturuldu. Form No: MASKİ-{yeniForm.FormSiraNo:D4}", formNo = yeniForm.FormSiraNo });
         }
+
+        [HttpGet("talepler")]
+        public async Task<IActionResult> GetTalepler()
+        {
+            var talepler = await _context.MalzemeTalepFormlar
+                .Include(t => t.TalepEdenPersonel)
+                .Include(t => t.Satirlar)
+                    .ThenInclude(s => s.Stok)
+                        .ThenInclude(st => st.Malzeme)
+                .OrderByDescending(t => t.TalepTarihi)
+                .Select(t => new TalepDetailDto
+                {
+                    Id = t.Id,
+                    FormNo = t.FormSiraNo,
+                    RequesterName = t.TalepEdenPersonel != null ? t.TalepEdenPersonel.AdSoyad : "Bilinmeyen",
+                    Date = t.TalepTarihi.ToString("dd.MM.yyyy HH:mm"),
+                    Description = t.GenelAciklama ?? "",
+                    Status = t.Durum.ToString(),
+                    Items = t.Satirlar.Select(s => new TalepSatirDetailDto
+                    {
+                        Id = s.Id,
+                        MaterialName = s.Stok != null ? (s.Stok.UrunAdi ?? s.Stok.Malzeme.Ad) : "Bilinmeyen",
+                        Specification = s.Stok != null ? (s.Stok.FormKayitId.HasValue ? "Var" : "") : "", // Basitleştirilmiş
+                        Quantity = s.Miktar,
+                        Unit = s.Stok != null ? s.Stok.Birim : "Adet"
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            return Ok(talepler);
+        }
+
+        [HttpPost("approve-talep/{id}")]
+        public async Task<IActionResult> ApproveTalep(int id)
+        {
+            var talep = await _context.MalzemeTalepFormlar.FindAsync(id);
+            if (talep == null) return NotFound();
+
+            talep.Durum = TalepDurumu.Onaylandi;
+            talep.OnayTarihi = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Talep onaylandı." });
+        }
+
+        [HttpPost("reject-talep/{id}")]
+        public async Task<IActionResult> RejectTalep(int id)
+        {
+            var talep = await _context.MalzemeTalepFormlar.FindAsync(id);
+            if (talep == null) return NotFound();
+
+            talep.Durum = TalepDurumu.Reddedildi;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Talep reddedildi." });
+        }
+
         [HttpGet("movements")]
         public async Task<IActionResult> GetStockMovements([FromQuery] string? type, [FromQuery] string? startDate, [FromQuery] string? endDate)
         {
@@ -206,6 +263,8 @@ namespace AritmaEnvanter.Controllers
                 .Include(h => h.KaynakDepo)
                 .Include(h => h.HedefDepo)
                 .Include(h => h.RafTanim)
+                .Include(h => h.FormKayit)
+                .ThenInclude(fk => fk.Degerler)
                 .AsQueryable();
 
             if (!string.IsNullOrEmpty(type))
@@ -223,22 +282,24 @@ namespace AritmaEnvanter.Controllers
                 query = query.Where(h => h.Tarih <= end.ToUniversalTime().AddDays(1));
             }
 
-            var movements = await query
+            var movementsData = await query
                 .OrderByDescending(h => h.Tarih)
                 .Take(100)
-                .Select(h => new MovementItemDto
-                {
-                    Id = h.Id,
-                    MaterialName = h.Malzeme != null ? h.Malzeme.Ad : "Bilinmeyen",
-                    Amount = h.Miktar,
-                    Unit = h.Malzeme != null && h.Malzeme.Birim != null ? h.Malzeme.Birim.Ad : "Adet",
-                    TransactionType = h.IslemTuru != null ? h.IslemTuru : (h.HedefDepoId == null ? "ÇIK" : "GİR"),
-                    Date = h.Tarih.ToString("dd.MM.yyyy HH:mm"),
-                    User = h.IslemYapanKisi ?? "Sistem",
-                    WarehouseName = h.HedefDepo != null ? h.HedefDepo.Ad : (h.KaynakDepo != null ? h.KaynakDepo.Ad : "-"),
-                    ShelfName = h.RafTanim != null ? h.RafTanim.Ad : (h.RafNo != null ? h.RafNo : "-")
-                })
                 .ToListAsync();
+
+            var movements = movementsData.Select(h => new MovementItemDto
+            {
+                Id = h.Id,
+                MaterialName = h.Malzeme != null ? h.Malzeme.Ad : "Bilinmeyen",
+                Amount = h.Miktar,
+                Unit = h.Malzeme != null && h.Malzeme.Birim != null ? h.Malzeme.Birim.Ad : "Adet",
+                TransactionType = h.IslemTuru != null ? h.IslemTuru : (h.HedefDepoId == null ? "ÇIK" : "GİR"),
+                Date = h.Tarih.ToString("dd.MM.yyyy HH:mm"),
+                User = h.IslemYapanKisi ?? "Sistem",
+                WarehouseName = h.HedefDepo != null ? h.HedefDepo.Ad : (h.KaynakDepo != null ? h.KaynakDepo.Ad : "-"),
+                ShelfName = h.RafTanim != null ? h.RafTanim.Ad : (h.RafNo != null ? h.RafNo : "-"),
+                Specification = h.FormKayit != null ? string.Join(" ", h.FormKayit.Degerler.Select(d => d.Deger)) : ""
+            }).ToList();
 
             return Ok(movements);
         }
@@ -438,6 +499,40 @@ namespace AritmaEnvanter.Controllers
 
                 await _context.SaveChangesAsync();
                 return Ok(new { success = true, message = "Stok çıkışı başarılı." });
+            }
+            else if (request.OperationType == "IADE")
+            {
+                if (request.StokId == null)
+                    return BadRequest(new { success = false, message = "Stok seçimi zorunludur." });
+
+                var stok = await _context.DepoStoklar
+                    .Include(s => s.Malzeme)
+                    .FirstOrDefaultAsync(s => s.Id == request.StokId);
+
+                if (stok == null)
+                    return NotFound(new { success = false, message = "Stok kaydı bulunamadı." });
+
+                stok.Miktar += request.Amount;
+                stok.GuncellemeTarihi = DateTime.UtcNow;
+                stok.IslemYapanKisi = userName;
+
+                var hareket = new DepoHareket
+                {
+                    MalzemeId = stok.MalzemeId,
+                    HedefDepoId = stok.DepoId,
+                    KaynakDepoId = stok.DepoId,
+                    RafTanimId = stok.RafTanimId,
+                    Miktar = request.Amount,
+                    Tarih = DateTime.UtcNow,
+                    IslemYapanKisi = userName,
+                    IslemTuru = "IAD",
+                    Aciklama = request.Note ?? "Mobil İade",
+                    FormKayitId = stok.FormKayitId
+                };
+                _context.DepoHareketler.Add(hareket);
+
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = "Ürün iadesi başarılı." });
             }
 
             return BadRequest(new { success = false, message = "Geçersiz işlem tipi." });

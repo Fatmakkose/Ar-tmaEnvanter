@@ -13,6 +13,15 @@ namespace AritmaEnvanter.Mobile.Converters
                     return !result;
                 return result;
             }
+            if (value is string stringValue)
+            {
+                bool result = !string.IsNullOrWhiteSpace(stringValue);
+                if (parameter?.ToString() == "notempty")
+                    return result;
+                if (parameter?.ToString() == "invert")
+                    return !result;
+                return result;
+            }
             return false;
         }
 

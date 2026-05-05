@@ -71,6 +71,7 @@ namespace AritmaEnvanter.Models.DTOs
         public string User { get; set; }
         public string WarehouseName { get; set; }
         public string ShelfName { get; set; }
+        public string Specification { get; set; }
     }
 
     public class FormAlanDto
@@ -110,5 +111,25 @@ namespace AritmaEnvanter.Models.DTOs
     {
         public int FieldId { get; set; }
         public string Value { get; set; }
+    }
+
+    public class TalepDetailDto
+    {
+        public int Id { get; set; }
+        public int FormNo { get; set; }
+        public string RequesterName { get; set; }
+        public string Date { get; set; }
+        public string Description { get; set; }
+        public string Status { get; set; }
+        public List<TalepSatirDetailDto> Items { get; set; }
+    }
+
+    public class TalepSatirDetailDto
+    {
+        public int Id { get; set; }
+        public string MaterialName { get; set; }
+        public string Specification { get; set; }
+        public decimal Quantity { get; set; }
+        public string Unit { get; set; }
     }
 }

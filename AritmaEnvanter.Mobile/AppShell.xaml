@@ -7,31 +7,32 @@
     Shell.FlyoutBehavior="Disabled"
     Title="Arıtma Envanter">
 
-    <!-- Login Page (No Tabs) -->
+    <!-- Login Page -->
     <ShellContent
         Title="Giriş"
         ContentTemplate="{DataTemplate views:LoginPage}"
         Route="Login"
+        Shell.FlyoutBehavior="Disabled"
         Shell.TabBarIsVisible="False"
         Shell.NavBarIsVisible="False" />
 
-    <!-- Main Navigation with Tabs -->
-    <TabBar>
-        <Tab Title="Ürünler" Icon="dotnet_bot.png">
+    <!-- Main Navigation with Tabs (Hidden) -->
+    <TabBar Shell.TabBarIsVisible="False">
+        <Tab Title="Ürünler">
             <ShellContent
                 Title="Ürün Listesi"
                 ContentTemplate="{DataTemplate views:InventoryPage}"
                 Route="Stoklar" />
         </Tab>
-        
-        <Tab Title="Hareketler" Icon="dotnet_bot.png">
+
+        <Tab Title="Hareketler">
             <ShellContent
                 Title="İşlem Geçmişi"
                 ContentTemplate="{DataTemplate views:MovementsPage}"
                 Route="Hareketler" />
         </Tab>
 
-        <Tab Title="Talepler" Icon="dotnet_bot.png">
+        <Tab Title="Talepler">
             <ShellContent
                 Title="Talepler"
                 ContentTemplate="{DataTemplate views:RequestPage}"

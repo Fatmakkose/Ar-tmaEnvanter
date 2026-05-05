@@ -1,46 +1,134 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AritmaEnvanter.Mobile.ViewModels"
+             xmlns:models="clr-namespace:AritmaEnvanter.Mobile.Models"
+             xmlns:converters="clr-namespace:AritmaEnvanter.Mobile.Converters"
+             xmlns:controls="clr-namespace:AritmaEnvanter.Mobile.Controls"
              x:Class="AritmaEnvanter.Mobile.Views.RequestPage"
-             Title="Malzeme Talebi">
+             Title="Talepler"
+             BackgroundColor="#EEF3FF"
+             Shell.NavBarIsVisible="False"
+             x:DataType="vm:RequestViewModel">
+    
+    <ContentPage.Resources>
+        <converters:IntToBoolConverter x:Key="IntToBoolConverter" />
+    </ContentPage.Resources>
 
-    <Grid RowDefinitions="*, Auto" Padding="20">
-        
-        <VerticalStackLayout Grid.Row="0" Spacing="15">
-            <Label Text="Yeni Talep Oluştur" FontSize="20" FontAttributes="Bold" />
-            
-            <Label Text="Genel Açıklama" />
-            <Frame Padding="10,0" HasShadow="False" BackgroundColor="#F5F5F5">
-                <Editor Placeholder="Talebinizle ilgili notlar..." HeightRequest="100" />
-            </Frame>
+    <Grid>
+        <Grid RowDefinitions="Auto, *">
+            <!-- Premium Header -->
+            <Border Grid.Row="0" StrokeThickness="0" HeightRequest="110" VerticalOptions="Start">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="0,0,40,40" />
+                </Border.StrokeShape>
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#F39C12" Offset="0.0" />
+                        <GradientStop Color="#E67E22" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Border.Background>
 
-            <Label Text="Seçilen Ürünler (0)" FontAttributes="Bold" Margin="0,10,0,0" />
-            
-            <BoxView HeightRequest="1" Color="#E1E1E1" />
-            
-            <Label Text="Talep listesine ürün eklemek için stok listesinden seçim yapabilirsiniz." 
-                   TextColor="Gray" 
-                   FontSize="12" 
-                   HorizontalOptions="Center" 
-                   Margin="0,20" />
+                <Grid Padding="20,18,20,18">
+                    <HorizontalStackLayout HorizontalOptions="Start" VerticalOptions="Center" Spacing="15">
+                        <Border BackgroundColor="White" Padding="8" StrokeShape="RoundRectangle 12" StrokeThickness="0">
+                            <Label Text="📝" FontSize="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="MALZEME TALEPLERİ" FontSize="18" FontAttributes="Bold" TextColor="White" CharacterSpacing="1" />
+                            <Label Text="Onay Bekleyen İşlemler" FontSize="11" TextColor="White" Opacity="0.9" />
+                        </VerticalStackLayout>
+                    </HorizontalStackLayout>
+                </Grid>
+            </Border>
 
-            <Button Text="+ ÜRÜN EKLE"
-                    BorderColor="#512BD4"
-                    BorderWidth="1"
-                    BackgroundColor="Transparent"
-                    TextColor="#512BD4"
-                    FontAttributes="Bold"
-                    CornerRadius="10" />
-        </VerticalStackLayout>
+            <RefreshView Grid.Row="1" IsRefreshing="{Binding IsRefreshing}" Command="{Binding LoadRequestsCommand}" Margin="0,10,0,0">
+                <CollectionView ItemsSource="{Binding Requests}" SelectionMode="None">
+                    <CollectionView.Header>
+                        <BoxView HeightRequest="10" Color="Transparent" />
+                    </CollectionView.Header>
+                    
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:RequestForm">
+                            <Grid Padding="20,8">
+                                <Border BackgroundColor="White" StrokeThickness="1" Stroke="#F0F0F0" StrokeShape="RoundRectangle 18" Padding="15">
+                                    <VerticalStackLayout Spacing="12">
+                                        <!-- Header Row -->
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <HorizontalStackLayout Spacing="8">
+                                                <Label Text="{Binding FormNo, StringFormat='#{0:D4}'}" FontAttributes="Bold" FontSize="16" TextColor="#2C3E50" />
+                                                <Border BackgroundColor="{Binding StatusColor}" Padding="8,2" StrokeShape="RoundRectangle 8" StrokeThickness="0">
+                                                    <Label Text="{Binding Status}" TextColor="White" FontSize="10" FontAttributes="Bold" />
+                                                </Border>
+                                            </HorizontalStackLayout>
+                                            <Label Grid.Column="1" Text="{Binding Date}" FontSize="11" TextColor="#7F8C8D" VerticalOptions="Center" />
+                                        </Grid>
 
-        <Button Grid.Row="1"
-                Text="TALEBİ GÖNDER"
-                BackgroundColor="#512BD4"
-                TextColor="White"
-                FontAttributes="Bold"
-                HeightRequest="50"
-                CornerRadius="10"
-                Margin="0,20,0,0" />
+                                        <!-- Requester -->
+                                        <HorizontalStackLayout Spacing="8">
+                                            <Label Text="👤" FontSize="12" />
+                                            <Label Text="{Binding RequesterName}" FontSize="13" TextColor="#34495E" FontAttributes="Bold" />
+                                        </HorizontalStackLayout>
 
+                                        <!-- Items List -->
+                                        <Border BackgroundColor="#F8F9FA" Padding="12" StrokeShape="RoundRectangle 12" StrokeThickness="0">
+                                            <VerticalStackLayout Spacing="5">
+                                                <Label Text="İSTENEN MALZEMELER" FontSize="10" TextColor="#95A5A6" FontAttributes="Bold" Margin="0,0,0,5" />
+                                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Items}">
+                                                    <BindableLayout.ItemTemplate>
+                                                        <DataTemplate x:DataType="models:RequestItem">
+                                                            <Grid ColumnDefinitions="*, Auto" Margin="0,2">
+                                                                <Label Text="{Binding MaterialName}" FontSize="12" TextColor="#2C3E50" />
+                                                                <Label Grid.Column="1" Text="{Binding Quantity, StringFormat='{0} Adet'}" FontSize="12" FontAttributes="Bold" TextColor="#1F3768" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </BindableLayout.ItemTemplate>
+                                                </VerticalStackLayout>
+                                            </VerticalStackLayout>
+                                        </Border>
+
+                                        <!-- Note -->
+                                        <Label Text="{Binding Description}" FontSize="12" TextColor="#7F8C8D" FontAttributes="Italic" 
+                                               IsVisible="{Binding Description, Converter={StaticResource IntToBoolConverter}, ConverterParameter=notempty}" />
+
+                                        <!-- Action Buttons (Only if Pending) -->
+                                        <Grid ColumnDefinitions="*, *" ColumnSpacing="15" Margin="0,5,0,0" 
+                                              IsVisible="{Binding IsPending}">
+                                            <!-- Logic: Show buttons only if status is Beklemede. For demo, I'll use a converter or just show them. -->
+                                            <!-- I'll use a simple approach for now: buttons are visible if status is 'Beklemede' -->
+                                            <Button Grid.Column="0" Text="REDDET" 
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:RequestViewModel}}, Path=RejectRequestCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    BackgroundColor="Transparent" BorderColor="#C0392B" BorderWidth="1" TextColor="#C0392B"
+                                                    FontSize="12" FontAttributes="Bold" CornerRadius="10" HeightRequest="40" />
+                                            
+                                            <Button Grid.Column="1" Text="ONAYLA" 
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:RequestViewModel}}, Path=ApproveRequestCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    BackgroundColor="#27AE60" TextColor="White"
+                                                    FontSize="12" FontAttributes="Bold" CornerRadius="10" HeightRequest="40" />
+                                        </Grid>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                    
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="15" Padding="50">
+                            <Label Text="📭" FontSize="50" HorizontalOptions="Center" />
+                            <Label Text="Bekleyen talep bulunamadı." TextColor="#7F8C8D" FontSize="14" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+
+                    <CollectionView.Footer>
+                        <BoxView HeightRequest="100" Color="Transparent" />
+                    </CollectionView.Footer>
+                </CollectionView>
+            </RefreshView>
+        </Grid>
+
+        <!-- Custom Navigation Bar -->
+        <controls:CustomNavigationBar CurrentPage="Talepler" VerticalOptions="End" ZIndex="100" />
     </Grid>
 </ContentPage>

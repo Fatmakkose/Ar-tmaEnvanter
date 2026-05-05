@@ -4,15 +4,15 @@
              xmlns:vm="clr-namespace:AritmaEnvanter.Mobile.ViewModels"
              x:Class="AritmaEnvanter.Mobile.Views.LoginPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="White">
+             BackgroundColor="#e7f0faff">
 
     <VerticalStackLayout Spacing="25" Padding="30" VerticalOptions="Center">
         
-        <Image Source="dotnet_bot.png"
-               HeightRequest="120"
+        <Image Source="logo.png"
+               HeightRequest="150"
                HorizontalOptions="Center" />
 
-        <Label Text="Arıtma Envanter"
+        <Label Text="ARITMA ENVANTER"
                FontSize="28"
                FontAttributes="Bold"
                TextColor="#1a5fae"

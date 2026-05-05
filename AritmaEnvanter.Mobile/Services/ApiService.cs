@@ -7,13 +7,21 @@ namespace AritmaEnvanter.Mobile.Services
     public class ApiService
     {
         private readonly HttpClient _httpClient;
-        private readonly string _baseUrl = "https://knglx2sj-5235.euw.devtunnels.ms/api/MobileApi/";
+        private readonly string _baseUrl;
 
         public ApiService()
         {
             _httpClient = new HttpClient();
-            // Dev Tunnel "Mavi Ekran"ı geçmek için gerekli header
-            _httpClient.DefaultRequestHeaders.Add("X-Free-Tunnel-Bypass", "true");
+            
+            // Android Emülatör için localhost erişimi 10.0.2.2 üzerinden sağlanır.
+            if (DeviceInfo.Platform == DevicePlatform.Android && DeviceInfo.DeviceType == DeviceType.Virtual)
+            {
+                _baseUrl = "http://10.0.2.2:5235/api/MobileApi/";
+            }
+            else
+            {
+                _baseUrl = "http://10.10.57.191:5235/api/MobileApi/";
+            }
         }
 
         public async Task<(bool Success, string Message, string? FullName)> LoginAsync(string email, string password)
@@ -146,6 +154,51 @@ namespace AritmaEnvanter.Mobile.Services
             catch (Exception ex)
             {
                 return (false, $"Bağlantı hatası: {ex.Message}");
+            }
+        }
+
+        public async Task<List<RequestForm>> GetTaleplerAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_baseUrl}talepler");
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    return JsonConvert.DeserializeObject<List<RequestForm>>(content) ?? new List<RequestForm>();
+                }
+            }
+            catch (Exception) { }
+            return new List<RequestForm>();
+        }
+
+        public async Task<(bool Success, string Message)> ApproveTalepAsync(int id)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"{_baseUrl}approve-talep/{id}", null);
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonConvert.DeserializeObject<dynamic>(content);
+                return (response.IsSuccessStatusCode, (string?)result?.message ?? "İşlem başarılı.");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Hata: {ex.Message}");
+            }
+        }
+
+        public async Task<(bool Success, string Message)> RejectTalepAsync(int id)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"{_baseUrl}reject-talep/{id}", null);
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonConvert.DeserializeObject<dynamic>(content);
+                return (response.IsSuccessStatusCode, (string?)result?.message ?? "İşlem başarılı.");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Hata: {ex.Message}");
             }
         }
     }

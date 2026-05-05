@@ -6,7 +6,7 @@
 
     <Grid>
         <WebView x:Name="AritmaWebView" 
-                 Source="https://knglx2sj-5235.euw.devtunnels.ms/?X-Free-Tunnel-Bypass=true" 
+                 Source="http://10.10.57.191:5235/Account/Login" 
                  Navigating="AritmaWebView_Navigating"
                  Navigated="AritmaWebView_Navigated" />
     </Grid>
